@@ -9,9 +9,13 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Quizzes from "./pages/Quizzes";
+import QuizBuilder from "./pages/QuizBuilder";
 import Surveys from "./pages/Surveys";
+import SurveyBuilder from "./pages/SurveyBuilder";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
+import TakeQuiz from "./pages/TakeQuiz";
+import TakeSurvey from "./pages/TakeSurvey";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +30,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/quiz/:quizId" element={<TakeQuiz />} />
+            <Route path="/survey/:surveyId" element={<TakeSurvey />} />
             <Route
               path="/dashboard"
               element={
@@ -43,10 +49,26 @@ const App = () => (
               }
             />
             <Route
+              path="/dashboard/quizzes/new"
+              element={
+                <ProtectedRoute>
+                  <QuizBuilder />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/dashboard/surveys"
               element={
                 <ProtectedRoute>
                   <Surveys />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/surveys/new"
+              element={
+                <ProtectedRoute>
+                  <SurveyBuilder />
                 </ProtectedRoute>
               }
             />
@@ -66,7 +88,6 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
