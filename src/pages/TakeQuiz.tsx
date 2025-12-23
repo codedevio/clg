@@ -98,12 +98,8 @@ const TakeQuiz = () => {
         setQuestions(shuffledQuestions);
         setTimeLeft(quizData.time_limit_minutes * 60);
       } catch (error: any) {
-        toast({
-          variant: 'destructive',
-          title: 'Quiz not found',
-          description: 'This quiz may not exist or is not published.',
-        });
-        navigate('/');
+        console.error('Quiz fetch error:', error);
+        setQuiz(null);
       } finally {
         setLoading(false);
       }
