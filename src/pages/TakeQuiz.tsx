@@ -161,35 +161,41 @@ const TakeQuiz = () => {
     }
 
     try {
-      // Create student identity
-      const { data: identity, error: identityError } = await supabase
+      // Generate student identity ID client-side
+      const studentIdentityId = crypto.randomUUID();
+      
+      // Create student identity (no select needed, RLS only allows insert)
+      const { error: identityError } = await supabase
         .from('student_identities')
         .insert({
+          id: studentIdentityId,
           full_name: studentInfo.full_name,
           roll_number: studentInfo.roll_number,
           batch: studentInfo.batch,
           college_id: studentInfo.college_id,
-        })
-        .select()
-        .single();
+        });
 
       if (identityError) throw identityError;
 
-      // Create quiz attempt
-      const { data: attempt, error: attemptError } = await supabase
+      // Generate attempt ID and token client-side
+      const newAttemptId = crypto.randomUUID();
+      const newAttemptToken = crypto.randomUUID();
+
+      // Create quiz attempt (no select needed, RLS allows insert)
+      const { error: attemptError } = await supabase
         .from('quiz_attempts')
         .insert({
+          id: newAttemptId,
           quiz_id: quizId,
-          student_identity_id: identity.id,
+          student_identity_id: studentIdentityId,
           status: 'in_progress',
-        })
-        .select()
-        .single();
+          attempt_token: newAttemptToken,
+        });
 
       if (attemptError) throw attemptError;
 
-      setAttemptId(attempt.id);
-      setAttemptToken(attempt.attempt_token);
+      setAttemptId(newAttemptId);
+      setAttemptToken(newAttemptToken);
       setStage('quiz');
     } catch (error: any) {
       toast({
