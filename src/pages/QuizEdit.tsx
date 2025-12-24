@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import CSVQuestionUpload from '@/components/quiz/CSVQuestionUpload';
 import {
   ArrowLeft,
   Plus,
@@ -139,6 +140,11 @@ const QuizEdit = () => {
     if (!isNew) {
       setDeletedQuestionIds([...deletedQuestionIds, id]);
     }
+  };
+
+  const handleQuestionsImported = (importedQuestions: Question[]) => {
+    const questionsWithNewFlag = importedQuestions.map(q => ({ ...q, isNew: true }));
+    setQuestions([...questions, ...questionsWithNewFlag]);
   };
 
   const handleSave = async (publish?: boolean) => {
@@ -340,6 +346,8 @@ const QuizEdit = () => {
 
         {activeTab === 'questions' && (
           <div className="space-y-4">
+            <CSVQuestionUpload onQuestionsImported={handleQuestionsImported} />
+
             {questions.map((question, index) => (
               <Card key={question.id} className="border-border/50 shadow-sm">
                 <CardHeader className="pb-3">
