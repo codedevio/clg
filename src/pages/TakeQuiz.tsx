@@ -82,11 +82,9 @@ const TakeQuiz = () => {
         
         setQuiz(quizData);
 
+        // Use secure RPC function that doesn't expose correct_option
         const { data: questionsData, error: questionsError } = await supabase
-          .from('quiz_questions')
-          .select('id, question_text, option_a, option_b, option_c, option_d, marks, order_index')
-          .eq('quiz_id', quizId)
-          .order('order_index');
+          .rpc('get_quiz_questions_for_attempt', { p_quiz_id: quizId });
 
         if (questionsError) throw questionsError;
         
