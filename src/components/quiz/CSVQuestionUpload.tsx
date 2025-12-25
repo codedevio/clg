@@ -144,11 +144,17 @@ const CSVQuestionUpload = ({ onQuestionsImported }: CSVQuestionUploadProps) => {
   };
 
   const handleFile = (file: File) => {
-    if (!file.name.endsWith('.csv')) {
+    // Accept CSV files by extension or MIME type
+    const isCSV = file.name.toLowerCase().endsWith('.csv') || 
+                  file.type === 'text/csv' || 
+                  file.type === 'application/vnd.ms-excel' ||
+                  file.type === 'text/plain';
+    
+    if (!isCSV) {
       toast({
         variant: 'destructive',
         title: 'Invalid file type',
-        description: 'Please upload a CSV file',
+        description: 'Please upload a CSV file (.csv)',
       });
       return;
     }
@@ -156,14 +162,23 @@ const CSVQuestionUpload = ({ onQuestionsImported }: CSVQuestionUploadProps) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const text = e.target?.result as string;
+        let text = e.target?.result as string;
+        
+        // Normalize line endings (handle Windows \r\n and old Mac \r)
+        text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        
+        // Remove BOM if present
+        if (text.charCodeAt(0) === 0xFEFF) {
+          text = text.slice(1);
+        }
+        
         const questions = parseCSV(text);
         
         if (questions.length === 0) {
           toast({
             variant: 'destructive',
             title: 'No valid questions found',
-            description: 'Please check the CSV format and try again',
+            description: 'Please check the CSV format and try again. Make sure you have the required columns: question_text, option_a, option_b, option_c, option_d, correct_option',
           });
           return;
         }
@@ -174,6 +189,7 @@ const CSVQuestionUpload = ({ onQuestionsImported }: CSVQuestionUploadProps) => {
           description: `Successfully imported ${questions.length} question(s)`,
         });
       } catch (error: any) {
+        console.error('CSV parse error:', error);
         toast({
           variant: 'destructive',
           title: 'Failed to parse CSV',
@@ -181,7 +197,14 @@ const CSVQuestionUpload = ({ onQuestionsImported }: CSVQuestionUploadProps) => {
         });
       }
     };
-    reader.readAsText(file);
+    reader.onerror = () => {
+      toast({
+        variant: 'destructive',
+        title: 'Failed to read file',
+        description: 'Could not read the file. Please try again.',
+      });
+    };
+    reader.readAsText(file, 'UTF-8');
   };
 
   const handleDrop = (e: React.DragEvent) => {
