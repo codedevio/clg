@@ -70,10 +70,34 @@ const CSVQuestionUpload = ({ onQuestionsImported }: CSVQuestionUploadProps) => {
           row[h] = values[idx] || '';
         });
 
-        // Validate correct_option
-        const correctOption = row.correct_option?.toUpperCase();
-        if (!['A', 'B', 'C', 'D'].includes(correctOption)) {
-          errors.push(`Row ${i + 1}: Invalid correct_option "${row.correct_option}" (must be A, B, C, or D)`);
+        // Validate correct_option (accepts A/B/C/D or option_a/option_b/option_c/option_d)
+        const rawCorrectOption = (row.correct_option ?? '').toString();
+        const normalizedCorrectOption = rawCorrectOption
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, '')
+          .replace(/[^a-z0-9]/g, '');
+
+        const correctOptionMap: Record<string, 'A' | 'B' | 'C' | 'D'> = {
+          a: 'A',
+          optiona: 'A',
+          '1': 'A',
+          b: 'B',
+          optionb: 'B',
+          '2': 'B',
+          c: 'C',
+          optionc: 'C',
+          '3': 'C',
+          d: 'D',
+          optiond: 'D',
+          '4': 'D',
+        };
+
+        const correctOption = correctOptionMap[normalizedCorrectOption];
+        if (!correctOption) {
+          errors.push(
+            `Row ${i + 1}: Invalid correct_option "${rawCorrectOption}" (use A/B/C/D or option_a/option_b/option_c/option_d)`
+          );
           continue;
         }
 
@@ -102,12 +126,13 @@ const CSVQuestionUpload = ({ onQuestionsImported }: CSVQuestionUploadProps) => {
           option_b: row.option_b.trim(),
           option_c: row.option_c.trim(),
           option_d: row.option_d.trim(),
-          correct_option: correctOption as 'A' | 'B' | 'C' | 'D',
+          correct_option: correctOption,
           marks: parseInt(row.marks) || 1,
           difficulty,
         });
       } catch (err) {
-        errors.push(`Row ${i + 1}: Failed to parse row`);
+        const message = err instanceof Error ? err.message : 'Failed to parse row';
+        errors.push(`Row ${i + 1}: ${message}`);
       }
     }
 
