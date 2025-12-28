@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import CSVSurveyQuestionUpload from '@/components/survey/CSVSurveyQuestionUpload';
 import {
   ArrowLeft,
   Plus,
@@ -57,6 +58,10 @@ const SurveyBuilder = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [questions, setQuestions] = useState<SurveyQuestion[]>([]);
+
+  const handleQuestionsImported = (importedQuestions: SurveyQuestion[]) => {
+    setQuestions(prev => [...prev, ...importedQuestions]);
+  };
 
   const addQuestion = (type: QuestionType) => {
     const newQuestion: SurveyQuestion = {
@@ -222,9 +227,12 @@ const SurveyBuilder = () => {
           </CardContent>
         </Card>
 
+        {/* CSV Upload */}
+        <CSVSurveyQuestionUpload onQuestionsImported={handleQuestionsImported} />
+
         {/* Questions */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Questions</h2>
+          <h2 className="text-lg font-semibold text-foreground">Questions ({questions.length})</h2>
           
           {questions.map((question, index) => {
             const Icon = questionTypeIcons[question.question_type];
