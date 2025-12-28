@@ -88,6 +88,7 @@ const QuizResults = () => {
           )
         `)
         .eq('quiz_id', quizId)
+        .in('status', ['submitted', 'auto_submitted'])
         .order('submitted_at', { ascending: false });
 
       if (attemptsError) throw attemptsError;
