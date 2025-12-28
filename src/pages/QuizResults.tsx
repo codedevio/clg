@@ -255,6 +255,7 @@ const QuizResults = () => {
                       <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Tab Switches</th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Submitted</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -316,6 +317,18 @@ const QuizResults = () => {
                           {attempt.submitted_at 
                             ? format(new Date(attempt.submitted_at), 'MMM d, yyyy h:mm a')
                             : '-'}
+                        </td>
+                        <td className="py-3 px-4">
+                          {(attempt.status === 'submitted' || attempt.status === 'auto_submitted') && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => navigate(`/dashboard/quizzes/attempt/${attempt.id}/review`)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Review
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     ))}

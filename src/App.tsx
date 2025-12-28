@@ -12,6 +12,7 @@ import Quizzes from "./pages/Quizzes";
 import QuizBuilder from "./pages/QuizBuilder";
 import QuizEdit from "./pages/QuizEdit";
 import QuizResults from "./pages/QuizResults";
+import AdminAttemptReview from "./pages/AdminAttemptReview";
 import Surveys from "./pages/Surveys";
 import SurveyBuilder from "./pages/SurveyBuilder";
 import SurveyEdit from "./pages/SurveyEdit";
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/dashboard/quizzes/new" element={<ProtectedRoute><QuizBuilder /></ProtectedRoute>} />
             <Route path="/dashboard/quizzes/:quizId/edit" element={<ProtectedRoute><QuizEdit /></ProtectedRoute>} />
             <Route path="/dashboard/quizzes/:quizId/results" element={<ProtectedRoute><QuizResults /></ProtectedRoute>} />
+            <Route path="/dashboard/quizzes/attempt/:attemptId/review" element={<ProtectedRoute><AdminAttemptReview /></ProtectedRoute>} />
             <Route path="/dashboard/surveys" element={<ProtectedRoute><Surveys /></ProtectedRoute>} />
             <Route path="/dashboard/surveys/new" element={<ProtectedRoute><SurveyBuilder /></ProtectedRoute>} />
             <Route path="/dashboard/surveys/:surveyId/edit" element={<ProtectedRoute><SurveyEdit /></ProtectedRoute>} />
