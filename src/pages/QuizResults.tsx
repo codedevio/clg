@@ -115,16 +115,45 @@ const QuizResults = () => {
     return `${mins}m ${secs}s`;
   };
 
-  const getPosition = (percentage: number | null) => {
-    if (percentage === null || !quiz) return { label: '-', variant: 'secondary' as const, icon: null };
+  // Sort attempts by score (desc), then by submission time (asc), then by duration (asc)
+  const getSortedAttempts = () => {
+    return [...attempts].sort((a, b) => {
+      // First: Compare by score (descending)
+      const scoreA = a.score ?? 0;
+      const scoreB = b.score ?? 0;
+      if (scoreB !== scoreA) return scoreB - scoreA;
+      
+      // Tie-breaker 1: Earlier submission time
+      const submittedA = a.submitted_at ? new Date(a.submitted_at).getTime() : Infinity;
+      const submittedB = b.submitted_at ? new Date(b.submitted_at).getTime() : Infinity;
+      if (submittedA !== submittedB) return submittedA - submittedB;
+      
+      // Tie-breaker 2: Shorter completion duration
+      const durationA = a.time_spent_seconds ?? Infinity;
+      const durationB = b.time_spent_seconds ?? Infinity;
+      return durationA - durationB;
+    });
+  };
+
+  const getRank = (attemptId: string) => {
+    const sorted = getSortedAttempts();
+    const index = sorted.findIndex(a => a.id === attemptId);
+    return index + 1;
+  };
+
+  const getPositionByRank = (rank: number, percentage: number | null) => {
+    if (!quiz) return { label: '-', variant: 'secondary' as const, icon: null };
     
-    if (percentage >= quiz.first_position_min) {
+    // Check if passed first
+    const passed = percentage !== null && percentage >= quiz.passing_percentage;
+    
+    if (rank === 1 && passed) {
       return { label: '1st Position', variant: 'default' as const, icon: '🥇' };
-    } else if (percentage >= quiz.second_position_min) {
+    } else if (rank === 2 && passed) {
       return { label: '2nd Position', variant: 'default' as const, icon: '🥈' };
-    } else if (percentage >= quiz.third_position_min) {
+    } else if (rank === 3 && passed) {
       return { label: '3rd Position', variant: 'default' as const, icon: '🥉' };
-    } else if (percentage >= quiz.passing_percentage) {
+    } else if (passed) {
       return { label: 'Passed', variant: 'secondary' as const, icon: '✅' };
     } else {
       return { label: 'Failed', variant: 'destructive' as const, icon: '❌' };
@@ -267,6 +296,7 @@ const QuizResults = () => {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Rank</th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Student</th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Roll No.</th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Batch</th>
@@ -280,82 +310,88 @@ const QuizResults = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {attempts.map((attempt) => (
-                      <tr key={attempt.id} className="border-b border-border/50 hover:bg-muted/50">
-                        <td className="py-3 px-4 font-medium">
-                          {attempt.student_identities?.full_name || 'Unknown'}
-                        </td>
-                        <td className="py-3 px-4 text-muted-foreground">
-                          {attempt.student_identities?.roll_number || '-'}
-                        </td>
-                        <td className="py-3 px-4 text-muted-foreground">
-                          {attempt.student_identities?.batch || '-'}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{attempt.score ?? '-'}/{quiz.total_marks}</span>
-                            <span className="text-muted-foreground text-sm">
-                              ({attempt.percentage?.toFixed(1) ?? 0}%)
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                            <span className="text-accent flex items-center gap-1">
-                              <CheckCircle className="h-3 w-3" /> {attempt.correct_count ?? 0}
-                            </span>
-                            <span className="text-destructive flex items-center gap-1">
-                              <XCircle className="h-3 w-3" /> {attempt.wrong_count ?? 0}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <MinusCircle className="h-3 w-3" /> {attempt.unanswered_count ?? 0}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          {(() => {
-                            const position = getPosition(attempt.percentage);
-                            return (
-                              <Badge variant={position.variant}>
-                                {position.icon} {position.label}
-                              </Badge>
-                            );
-                          })()}
-                        </td>
-                        <td className="py-3 px-4 text-muted-foreground">
-                          {formatDuration(attempt.time_spent_seconds)}
-                        </td>
-                        <td className="py-3 px-4">
-                          <Badge variant={(attempt.tab_switch_count ?? 0) > 2 ? 'destructive' : 'secondary'}>
-                            {attempt.tab_switch_count ?? 0}
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-4">
-                          <Badge variant={
-                            attempt.status === 'submitted' ? 'default' :
-                            attempt.status === 'auto_submitted' ? 'secondary' :
-                            attempt.status === 'in_progress' ? 'outline' : 'destructive'
-                          }>
-                            {attempt.status.replace('_', ' ')}
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-4 text-muted-foreground text-sm">
-                          {attempt.submitted_at 
-                            ? format(new Date(attempt.submitted_at), 'MMM d, yyyy h:mm a')
-                            : '-'}
-                        </td>
-                        <td className="py-3 px-4">
-                          {(attempt.status === 'submitted' || attempt.status === 'auto_submitted') && (
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => navigate(`/dashboard/quizzes/attempt/${attempt.id}/review`)}
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              Review
-                            </Button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                    {getSortedAttempts().map((attempt) => {
+                      const rank = getRank(attempt.id);
+                      return (
+                        <tr key={attempt.id} className="border-b border-border/50 hover:bg-muted/50">
+                          <td className="py-3 px-4 font-bold text-lg">
+                            #{rank}
+                          </td>
+                          <td className="py-3 px-4 font-medium">
+                            {attempt.student_identities?.full_name || 'Unknown'}
+                          </td>
+                          <td className="py-3 px-4 text-muted-foreground">
+                            {attempt.student_identities?.roll_number || '-'}
+                          </td>
+                          <td className="py-3 px-4 text-muted-foreground">
+                            {attempt.student_identities?.batch || '-'}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{attempt.score ?? '-'}/{quiz.total_marks}</span>
+                              <span className="text-muted-foreground text-sm">
+                                ({attempt.percentage?.toFixed(1) ?? 0}%)
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                              <span className="text-accent flex items-center gap-1">
+                                <CheckCircle className="h-3 w-3" /> {attempt.correct_count ?? 0}
+                              </span>
+                              <span className="text-destructive flex items-center gap-1">
+                                <XCircle className="h-3 w-3" /> {attempt.wrong_count ?? 0}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <MinusCircle className="h-3 w-3" /> {attempt.unanswered_count ?? 0}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            {(() => {
+                              const position = getPositionByRank(rank, attempt.percentage);
+                              return (
+                                <Badge variant={position.variant}>
+                                  {position.icon} {position.label}
+                                </Badge>
+                              );
+                            })()}
+                          </td>
+                          <td className="py-3 px-4 text-muted-foreground">
+                            {formatDuration(attempt.time_spent_seconds)}
+                          </td>
+                          <td className="py-3 px-4">
+                            <Badge variant={(attempt.tab_switch_count ?? 0) > 2 ? 'destructive' : 'secondary'}>
+                              {attempt.tab_switch_count ?? 0}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4">
+                            <Badge variant={
+                              attempt.status === 'submitted' ? 'default' :
+                              attempt.status === 'auto_submitted' ? 'secondary' :
+                              attempt.status === 'in_progress' ? 'outline' : 'destructive'
+                            }>
+                              {attempt.status.replace('_', ' ')}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4 text-muted-foreground text-sm">
+                            {attempt.submitted_at 
+                              ? format(new Date(attempt.submitted_at), 'MMM d, yyyy h:mm a')
+                              : '-'}
+                          </td>
+                          <td className="py-3 px-4">
+                            {(attempt.status === 'submitted' || attempt.status === 'auto_submitted') && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => navigate(`/dashboard/quizzes/attempt/${attempt.id}/review`)}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                Review
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
