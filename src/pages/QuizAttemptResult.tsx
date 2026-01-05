@@ -31,6 +31,10 @@ interface QuizAttempt {
     title: string;
     show_results_to_students: boolean;
     total_marks: number;
+    passing_percentage: number;
+    first_position_min: number;
+    second_position_min: number;
+    third_position_min: number;
   };
   student_identities: {
     full_name: string;
@@ -56,7 +60,11 @@ const QuizAttemptResult = () => {
           quizzes:quiz_id (
             title,
             show_results_to_students,
-            total_marks
+            total_marks,
+            passing_percentage,
+            first_position_min,
+            second_position_min,
+            third_position_min
           ),
           student_identities (
             full_name
@@ -84,6 +92,25 @@ const QuizAttemptResult = () => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}m ${secs}s`;
+  };
+
+  const getPosition = () => {
+    if (!attempt || attempt.percentage === null) return { label: '-', variant: 'secondary' as const, icon: null };
+    
+    const percentage = attempt.percentage;
+    const quiz = attempt.quiz;
+    
+    if (percentage >= quiz.first_position_min) {
+      return { label: '1st Position', variant: 'default' as const, icon: '🥇' };
+    } else if (percentage >= quiz.second_position_min) {
+      return { label: '2nd Position', variant: 'default' as const, icon: '🥈' };
+    } else if (percentage >= quiz.third_position_min) {
+      return { label: '3rd Position', variant: 'default' as const, icon: '🥉' };
+    } else if (percentage >= quiz.passing_percentage) {
+      return { label: 'Passed', variant: 'secondary' as const, icon: '✅' };
+    } else {
+      return { label: 'Failed', variant: 'destructive' as const, icon: '❌' };
+    }
   };
 
   if (isLoading) {
@@ -149,20 +176,11 @@ const QuizAttemptResult = () => {
               </div>
             </div>
             <Badge 
-              variant={attempt.passed ? 'default' : 'destructive'}
+              variant={getPosition().variant}
               className="mt-4 text-base px-4 py-1"
             >
-              {attempt.passed ? (
-                <>
-                  <Trophy className="h-4 w-4 mr-2" />
-                  Passed
-                </>
-              ) : (
-                <>
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Not Passed
-                </>
-              )}
+              <span className="mr-2">{getPosition().icon}</span>
+              {getPosition().label}
             </Badge>
           </div>
 

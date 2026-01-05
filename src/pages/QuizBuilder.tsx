@@ -60,6 +60,10 @@ const QuizBuilder = () => {
     negativeMarksPerWrong: 0,
     shuffleQuestions: true,
     showResultsToStudents: false,
+    passingPercentage: 40,
+    firstPositionMin: 90,
+    secondPositionMin: 75,
+    thirdPositionMin: 60,
   });
 
   const addQuestion = () => {
@@ -128,6 +132,10 @@ const QuizBuilder = () => {
           shuffle_questions: settings.shuffleQuestions,
           show_results_to_students: settings.showResultsToStudents,
           is_published: publish,
+          passing_percentage: settings.passingPercentage,
+          first_position_min: settings.firstPositionMin,
+          second_position_min: settings.secondPositionMin,
+          third_position_min: settings.thirdPositionMin,
         })
         .select()
         .single();
@@ -433,6 +441,74 @@ const QuizBuilder = () => {
                     />
                   </div>
                 )}
+              </div>
+
+              <Separator />
+
+              {/* Grading Thresholds */}
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-medium text-foreground mb-1">Grading Thresholds</h3>
+                  <p className="text-sm text-muted-foreground">Set percentage thresholds for passing and positions</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="passingPercentage">Passing % (Pass/Fail)</Label>
+                    <Input
+                      id="passingPercentage"
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={settings.passingPercentage}
+                      onChange={(e) => setSettings({ ...settings, passingPercentage: parseFloat(e.target.value) || 40 })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="firstPositionMin">1st Position Min %</Label>
+                    <Input
+                      id="firstPositionMin"
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={settings.firstPositionMin}
+                      onChange={(e) => setSettings({ ...settings, firstPositionMin: parseFloat(e.target.value) || 90 })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="secondPositionMin">2nd Position Min %</Label>
+                    <Input
+                      id="secondPositionMin"
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={settings.secondPositionMin}
+                      onChange={(e) => setSettings({ ...settings, secondPositionMin: parseFloat(e.target.value) || 75 })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="thirdPositionMin">3rd Position Min %</Label>
+                    <Input
+                      id="thirdPositionMin"
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={settings.thirdPositionMin}
+                      onChange={(e) => setSettings({ ...settings, thirdPositionMin: parseFloat(e.target.value) || 60 })}
+                    />
+                  </div>
+                </div>
+
+                <div className="p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+                  <p><strong>Position Logic:</strong></p>
+                  <ul className="list-disc list-inside mt-1 space-y-1">
+                    <li>🥇 1st Position: ≥ {settings.firstPositionMin}%</li>
+                    <li>🥈 2nd Position: ≥ {settings.secondPositionMin}% and &lt; {settings.firstPositionMin}%</li>
+                    <li>🥉 3rd Position: ≥ {settings.thirdPositionMin}% and &lt; {settings.secondPositionMin}%</li>
+                    <li>✅ Pass: ≥ {settings.passingPercentage}% and &lt; {settings.thirdPositionMin}%</li>
+                    <li>❌ Fail: &lt; {settings.passingPercentage}%</li>
+                  </ul>
+                </div>
               </div>
             </CardContent>
           </Card>
