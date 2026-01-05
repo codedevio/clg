@@ -50,6 +50,10 @@ interface Quiz {
   total_marks: number;
   time_limit_minutes: number;
   is_published: boolean;
+  passing_percentage: number;
+  first_position_min: number;
+  second_position_min: number;
+  third_position_min: number;
 }
 
 const QuizResults = () => {
@@ -109,6 +113,22 @@ const QuizResults = () => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}m ${secs}s`;
+  };
+
+  const getPosition = (percentage: number | null) => {
+    if (percentage === null || !quiz) return { label: '-', variant: 'secondary' as const, icon: null };
+    
+    if (percentage >= quiz.first_position_min) {
+      return { label: '1st Position', variant: 'default' as const, icon: '🥇' };
+    } else if (percentage >= quiz.second_position_min) {
+      return { label: '2nd Position', variant: 'default' as const, icon: '🥈' };
+    } else if (percentage >= quiz.third_position_min) {
+      return { label: '3rd Position', variant: 'default' as const, icon: '🥉' };
+    } else if (percentage >= quiz.passing_percentage) {
+      return { label: 'Passed', variant: 'secondary' as const, icon: '✅' };
+    } else {
+      return { label: 'Failed', variant: 'destructive' as const, icon: '❌' };
+    }
   };
 
   const getStats = () => {
@@ -291,11 +311,14 @@ const QuizResults = () => {
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          {attempt.passed !== null && (
-                            <Badge variant={attempt.passed ? 'default' : 'destructive'}>
-                              {attempt.passed ? 'Passed' : 'Failed'}
-                            </Badge>
-                          )}
+                          {(() => {
+                            const position = getPosition(attempt.percentage);
+                            return (
+                              <Badge variant={position.variant}>
+                                {position.icon} {position.label}
+                              </Badge>
+                            );
+                          })()}
                         </td>
                         <td className="py-3 px-4 text-muted-foreground">
                           {formatDuration(attempt.time_spent_seconds)}

@@ -294,13 +294,17 @@ export type Database = {
           creator_id: string
           description: string | null
           ends_at: string | null
+          first_position_min: number
           id: string
           is_published: boolean
           negative_marking: boolean
           negative_marks_per_wrong: number | null
+          passing_percentage: number
+          second_position_min: number
           show_results_to_students: boolean
           shuffle_questions: boolean
           starts_at: string | null
+          third_position_min: number
           time_limit_minutes: number
           title: string
           total_marks: number
@@ -311,13 +315,17 @@ export type Database = {
           creator_id: string
           description?: string | null
           ends_at?: string | null
+          first_position_min?: number
           id?: string
           is_published?: boolean
           negative_marking?: boolean
           negative_marks_per_wrong?: number | null
+          passing_percentage?: number
+          second_position_min?: number
           show_results_to_students?: boolean
           shuffle_questions?: boolean
           starts_at?: string | null
+          third_position_min?: number
           time_limit_minutes?: number
           title: string
           total_marks?: number
@@ -328,13 +336,17 @@ export type Database = {
           creator_id?: string
           description?: string | null
           ends_at?: string | null
+          first_position_min?: number
           id?: string
           is_published?: boolean
           negative_marking?: boolean
           negative_marks_per_wrong?: number | null
+          passing_percentage?: number
+          second_position_min?: number
           show_results_to_students?: boolean
           shuffle_questions?: boolean
           starts_at?: string | null
+          third_position_min?: number
           time_limit_minutes?: number
           title?: string
           total_marks?: number
