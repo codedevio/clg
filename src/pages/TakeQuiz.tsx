@@ -7,16 +7,28 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { GraduationCap, Clock, AlertTriangle, ChevronLeft, ChevronRight, Send, Loader2 } from 'lucide-react';
+import { GraduationCap, Clock, AlertTriangle, ChevronLeft, ChevronRight, Send, Loader2, Languages } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Question {
   id: string;
   question_text: string;
+  question_text_hindi?: string;
   option_a: string;
+  option_a_hindi?: string;
   option_b: string;
+  option_b_hindi?: string;
   option_c: string;
+  option_c_hindi?: string;
   option_d: string;
+  option_d_hindi?: string;
   marks: number;
   order_index: number;
 }
@@ -38,6 +50,8 @@ interface StudentIdentity {
   college_id: string;
 }
 
+type Language = 'en' | 'hi';
+
 const TakeQuiz = () => {
   const { quizId } = useParams();
   const navigate = useNavigate();
@@ -48,8 +62,8 @@ const TakeQuiz = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [language, setLanguage] = useState<Language>('en');
   
-  // Student Info
   const [studentInfo, setStudentInfo] = useState<StudentIdentity>({
     full_name: '',
     roll_number: '',
@@ -57,7 +71,6 @@ const TakeQuiz = () => {
     college_id: '',
   });
   
-  // Quiz State
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [attemptToken, setAttemptToken] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -65,7 +78,6 @@ const TakeQuiz = () => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
 
-  // Fetch quiz data
   useEffect(() => {
     const fetchQuiz = async () => {
       if (!quizId) return;
@@ -82,7 +94,6 @@ const TakeQuiz = () => {
         
         setQuiz(quizData);
 
-        // Use secure RPC function that doesn't expose correct_option
         const { data: questionsData, error: questionsError } = await supabase
           .rpc('get_quiz_questions_for_attempt', { p_quiz_id: quizId });
 
@@ -106,7 +117,6 @@ const TakeQuiz = () => {
     fetchQuiz();
   }, [quizId, navigate, toast]);
 
-  // Timer
   useEffect(() => {
     if (stage !== 'quiz' || timeLeft <= 0) return;
 
@@ -123,7 +133,6 @@ const TakeQuiz = () => {
     return () => clearInterval(timer);
   }, [stage, timeLeft]);
 
-  // Tab switch detection
   useEffect(() => {
     if (stage !== 'quiz') return;
 
@@ -159,10 +168,8 @@ const TakeQuiz = () => {
     }
 
     try {
-      // Generate student identity ID client-side
       const studentIdentityId = crypto.randomUUID();
       
-      // Create student identity (no select needed, RLS only allows insert)
       const { error: identityError } = await supabase
         .from('student_identities')
         .insert({
@@ -175,11 +182,9 @@ const TakeQuiz = () => {
 
       if (identityError) throw identityError;
 
-      // Generate attempt ID and token client-side
       const newAttemptId = crypto.randomUUID();
       const newAttemptToken = crypto.randomUUID();
 
-      // Create quiz attempt (no select needed, RLS allows insert)
       const { error: attemptError } = await supabase
         .from('quiz_attempts')
         .insert({
@@ -209,7 +214,6 @@ const TakeQuiz = () => {
     setSubmitting(true);
 
     try {
-      // Submit all responses
       const responses = Object.entries(answers).map(([questionId, selectedOption]) => ({
         attempt_id: attemptId,
         question_id: questionId,
@@ -220,7 +224,6 @@ const TakeQuiz = () => {
         await supabase.from('quiz_responses').insert(responses);
       }
 
-      // Update attempt status
       const timeSpent = quiz ? (quiz.time_limit_minutes * 60) - timeLeft : 0;
       
       await supabase
@@ -249,6 +252,26 @@ const TakeQuiz = () => {
     }
   }, [attemptId, answers, quiz, timeLeft, tabSwitchCount, submitting, toast]);
 
+  const getQuestionText = (q: Question) => {
+    if (language === 'hi' && q.question_text_hindi) {
+      return q.question_text_hindi;
+    }
+    return q.question_text;
+  };
+
+  const getOptionText = (q: Question, option: 'A' | 'B' | 'C' | 'D') => {
+    const optionKey = `option_${option.toLowerCase()}` as keyof Question;
+    const hindiKey = `option_${option.toLowerCase()}_hindi` as keyof Question;
+    
+    if (language === 'hi' && q[hindiKey]) {
+      return q[hindiKey] as string;
+    }
+    return q[optionKey] as string;
+  };
+
+  const attemptedCount = Object.keys(answers).length;
+  const unattemptedCount = questions.length - attemptedCount;
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -272,7 +295,6 @@ const TakeQuiz = () => {
     );
   }
 
-  // Identity Stage
   if (stage === 'identity') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -298,6 +320,22 @@ const TakeQuiz = () => {
                   {quiz.time_limit_minutes} minutes
                 </div>
                 <div>{questions.length} questions</div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="language" className="flex items-center gap-2">
+                  <Languages className="h-4 w-4" />
+                  Exam Language / परीक्षा भाषा *
+                </Label>
+                <Select value={language} onValueChange={(val) => setLanguage(val as Language)}>
+                  <SelectTrigger id="language">
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="hi">हिंदी (Hindi)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-4">
@@ -351,7 +389,6 @@ const TakeQuiz = () => {
     );
   }
 
-  // Submitted Stage
   if (stage === 'submitted') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -371,14 +408,12 @@ const TakeQuiz = () => {
     );
   }
 
-  // Quiz Stage
   const question = questions[currentQuestion];
   const progress = ((currentQuestion + 1) / questions.length) * 100;
   const isLowTime = timeLeft < 60;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
+    <div className="min-h-screen bg-background pb-32">
       <header className="sticky top-0 z-50 bg-card border-b border-border">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
@@ -389,32 +424,37 @@ const TakeQuiz = () => {
               <span className="font-semibold text-foreground hidden sm:inline">{quiz.title}</span>
             </div>
             
-            <div className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-lg font-bold",
-              isLowTime ? 'bg-destructive/10 text-destructive animate-pulse' : 'bg-muted'
-            )}>
-              <Clock className="h-5 w-5" />
-              {formatTime(timeLeft)}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-sm">
+                <Languages className="h-4 w-4" />
+                <span>{language === 'en' ? 'EN' : 'HI'}</span>
+              </div>
+              
+              <div className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-lg font-bold",
+                isLowTime ? 'bg-destructive/10 text-destructive animate-pulse' : 'bg-muted'
+              )}>
+                <Clock className="h-5 w-5" />
+                {formatTime(timeLeft)}
+              </div>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Progress */}
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
           <span>Question {currentQuestion + 1} of {questions.length}</span>
-          <span>{Object.keys(answers).length} answered</span>
+          <span>{attemptedCount} answered</span>
         </div>
         <Progress value={progress} className="h-2" />
       </div>
 
-      {/* Question */}
       <main className="container mx-auto px-4 py-6">
         <Card className="max-w-3xl mx-auto border-border/50 shadow-sm animate-fade-up">
           <CardHeader>
             <div className="flex items-start justify-between">
-              <CardTitle className="text-lg leading-relaxed">{question.question_text}</CardTitle>
+              <CardTitle className="text-lg leading-relaxed">{getQuestionText(question)}</CardTitle>
               <span className="text-sm text-muted-foreground whitespace-nowrap ml-4">
                 {question.marks} mark{question.marks > 1 ? 's' : ''}
               </span>
@@ -422,7 +462,6 @@ const TakeQuiz = () => {
           </CardHeader>
           <CardContent className="space-y-3">
             {(['A', 'B', 'C', 'D'] as const).map((option) => {
-              const optionKey = `option_${option.toLowerCase()}` as keyof Question;
               const isSelected = answers[question.id] === option;
               
               return (
@@ -443,7 +482,7 @@ const TakeQuiz = () => {
                     )}>
                       {option}
                     </span>
-                    <span className="pt-0.5">{question[optionKey] as string}</span>
+                    <span className="pt-0.5">{getOptionText(question, option)}</span>
                   </div>
                 </button>
               );
@@ -452,29 +491,54 @@ const TakeQuiz = () => {
         </Card>
       </main>
 
-      {/* Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4">
-        <div className="container mx-auto flex items-center justify-between max-w-3xl">
-          <Button
-            variant="outline"
-            onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
-            disabled={currentQuestion === 0}
-          >
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Previous
-          </Button>
+      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
+        <div className="border-b border-border bg-muted/50">
+          <div className="container mx-auto px-4 py-3 max-w-3xl">
+            <div className="flex items-center justify-center gap-6 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-3 rounded-full bg-primary"></div>
+                <span>
+                  <span className="font-semibold">{attemptedCount}</span>
+                  <span className="text-muted-foreground ml-1">Attempted</span>
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-3 rounded-full bg-muted-foreground/30"></div>
+                <span>
+                  <span className="font-semibold">{unattemptedCount}</span>
+                  <span className="text-muted-foreground ml-1">Unattempted</span>
+                </span>
+              </div>
+              <div className="text-muted-foreground">
+                Total: <span className="font-semibold text-foreground">{questions.length}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between max-w-3xl mx-auto">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
+              disabled={currentQuestion === 0}
+            >
+              <ChevronLeft className="h-4 w-4 mr-2" />
+              Previous
+            </Button>
 
-          {currentQuestion === questions.length - 1 ? (
-            <Button onClick={handleSubmit} disabled={submitting}>
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-              Submit Quiz
-            </Button>
-          ) : (
-            <Button onClick={() => setCurrentQuestion(Math.min(questions.length - 1, currentQuestion + 1))}>
-              Next
-              <ChevronRight className="h-4 w-4 ml-2" />
-            </Button>
-          )}
+            {currentQuestion === questions.length - 1 ? (
+              <Button onClick={handleSubmit} disabled={submitting}>
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+                Submit Quiz
+              </Button>
+            ) : (
+              <Button onClick={() => setCurrentQuestion(Math.min(questions.length - 1, currentQuestion + 1))}>
+                Next
+                <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>
