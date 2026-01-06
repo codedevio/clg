@@ -102,8 +102,11 @@ const CSVQuestionUpload = ({ onQuestionsImported }: CSVQuestionUploadProps) => {
         }
 
         // Validate difficulty
-        const difficulty = (row.difficulty?.toLowerCase() || 'medium') as 'easy' | 'medium' | 'hard';
-        if (!['easy', 'medium', 'hard'].includes(difficulty)) {
+        const rawDifficulty = (row.difficulty?.trim().toLowerCase() || 'medium');
+        const validDifficulties = ['easy', 'medium', 'hard'];
+        const difficulty = validDifficulties.includes(rawDifficulty) ? rawDifficulty as 'easy' | 'medium' | 'hard' : null;
+        
+        if (!difficulty) {
           errors.push(`Row ${i + 1}: Invalid difficulty "${row.difficulty}" (must be easy, medium, or hard)`);
           continue;
         }
