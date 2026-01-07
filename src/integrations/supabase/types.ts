@@ -592,7 +592,7 @@ export type Database = {
     }
     Enums: {
       access_type: "public" | "password" | "batch"
-      app_role: "admin" | "creator" | "student"
+      app_role: "admin" | "creator" | "student" | "super_admin"
       attempt_status:
         | "in_progress"
         | "submitted"
@@ -728,7 +728,7 @@ export const Constants = {
   public: {
     Enums: {
       access_type: ["public", "password", "batch"],
-      app_role: ["admin", "creator", "student"],
+      app_role: ["admin", "creator", "student", "super_admin"],
       attempt_status: [
         "in_progress",
         "submitted",
