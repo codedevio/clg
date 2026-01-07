@@ -1,6 +1,7 @@
 import { ReactNode, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -22,6 +23,7 @@ import {
   Menu,
   X,
   ChevronRight,
+  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -29,7 +31,7 @@ interface DashboardLayoutProps {
   children: ReactNode;
 }
 
-const navItems = [
+const baseNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/quizzes', label: 'Quizzes', icon: FileText },
   { href: '/dashboard/surveys', label: 'Surveys', icon: ClipboardList },
@@ -40,6 +42,7 @@ const navItems = [
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { isSuperAdmin } = useUserRole();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -51,6 +54,15 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const userInitials = user?.user_metadata?.full_name
     ? user.user_metadata.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase()
     : user?.email?.charAt(0).toUpperCase() || 'U';
+
+  // Build nav items dynamically based on role
+  const navItems = isSuperAdmin
+    ? [
+        ...baseNavItems.slice(0, 1),
+        { href: '/dashboard/admin', label: 'Admin Panel', icon: Shield },
+        ...baseNavItems.slice(1),
+      ]
+    : baseNavItems;
 
   return (
     <div className="min-h-screen bg-background">

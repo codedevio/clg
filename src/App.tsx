@@ -22,6 +22,7 @@ import Settings from "./pages/Settings";
 import TakeQuiz from "./pages/TakeQuiz";
 import TakeSurvey from "./pages/TakeSurvey";
 import QuizAttemptResult from "./pages/QuizAttemptResult";
+import SuperAdminPanel from "./pages/SuperAdminPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/quiz/result/:attemptId" element={<QuizAttemptResult />} />
             <Route path="/survey/:surveyId" element={<TakeSurvey />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/dashboard/admin" element={<ProtectedRoute><SuperAdminPanel /></ProtectedRoute>} />
             <Route path="/dashboard/quizzes" element={<ProtectedRoute><Quizzes /></ProtectedRoute>} />
             <Route path="/dashboard/quizzes/new" element={<ProtectedRoute><QuizBuilder /></ProtectedRoute>} />
             <Route path="/dashboard/quizzes/:quizId/edit" element={<ProtectedRoute><QuizEdit /></ProtectedRoute>} />
