@@ -149,6 +149,7 @@ const QuizAttemptResult = () => {
     );
   }
 
+  // Show results immediately - the show_results_to_students flag only controls detailed breakdown
   const showDetailedResults = attempt.quiz?.show_results_to_students;
 
   return (

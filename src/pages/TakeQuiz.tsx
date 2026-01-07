@@ -401,7 +401,14 @@ const TakeQuiz = () => {
             <p className="text-muted-foreground mb-6">
               Your responses have been recorded successfully.
             </p>
-            <Button onClick={() => navigate('/')}>Return Home</Button>
+            <div className="flex flex-col gap-3">
+              {attemptId && (
+                <Button onClick={() => navigate(`/quiz/result/${attemptId}`)}>
+                  View Results
+                </Button>
+              )}
+              <Button variant="outline" onClick={() => navigate('/')}>Return Home</Button>
+            </div>
           </CardContent>
         </Card>
       </div>
