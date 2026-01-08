@@ -46,6 +46,63 @@ export type Database = {
           },
         ]
       }
+      footer_content: {
+        Row: {
+          brand_description: string
+          brand_name: string
+          copyright_text: string
+          id: string
+          tagline: string
+          updated_at: string
+        }
+        Insert: {
+          brand_description?: string
+          brand_name?: string
+          copyright_text?: string
+          id?: string
+          tagline?: string
+          updated_at?: string
+        }
+        Update: {
+          brand_description?: string
+          brand_name?: string
+          copyright_text?: string
+          id?: string
+          tagline?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      footer_links: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          order_index: number
+          section: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          order_index?: number
+          section: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          order_index?: number
+          section?: string
+          url?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -351,6 +408,33 @@ export type Database = {
           title?: string
           total_marks?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
         }
         Relationships: []
       }

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -21,32 +22,24 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
+import SiteSettingsManager from '@/components/admin/SiteSettingsManager';
+import FooterContentManager from '@/components/admin/FooterContentManager';
 import {
   Shield,
   Users,
   FileText,
   ClipboardList,
   Search,
-  UserPlus,
   Loader2,
   Crown,
   ShieldCheck,
   User,
   GraduationCap,
+  Settings,
+  LayoutTemplate,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -116,7 +109,6 @@ const SuperAdminPanel = () => {
 
   const fetchData = async () => {
     try {
-      // Fetch profiles with their roles
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, email, full_name, created_at')
@@ -124,14 +116,12 @@ const SuperAdminPanel = () => {
 
       if (profilesError) throw profilesError;
 
-      // Fetch all roles
       const { data: rolesData, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role');
 
       if (rolesError) throw rolesError;
 
-      // Map roles to users
       const usersWithRoles: UserWithRoles[] = (profilesData || []).map(profile => ({
         ...profile,
         roles: (rolesData || [])
@@ -141,7 +131,6 @@ const SuperAdminPanel = () => {
 
       setUsers(usersWithRoles);
 
-      // Fetch system stats
       const [quizCount, surveyCount, attemptCount, responseCount] = await Promise.all([
         supabase.from('quizzes').select('id', { count: 'exact', head: true }),
         supabase.from('surveys').select('id', { count: 'exact', head: true }),
@@ -226,39 +215,39 @@ const SuperAdminPanel = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8 animate-fade-up">
+      <div className="space-y-6 sm:space-y-8 animate-fade-up">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-amber-500 flex items-center justify-center">
-              <Shield className="h-6 w-6 text-white" />
+            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-amber-500 flex items-center justify-center">
+              <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
                 Super Admin Panel
               </h1>
-              <p className="text-muted-foreground">
-                Manage users, roles, and view system statistics
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Manage users, roles, and system settings
               </p>
             </div>
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {loading ? (
-            [...Array(4)].map((_, i) => <Skeleton key={i} className="h-28" />)
+            [...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 sm:h-28" />)
           ) : (
             statCards.map((stat) => (
               <Card key={stat.label} className="border-border/50 shadow-sm hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
+                <CardContent className="p-3 sm:p-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                     <div>
-                      <p className="text-sm text-muted-foreground">{stat.label}</p>
-                      <p className="text-3xl font-bold text-foreground mt-1">{stat.value}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">{stat.label}</p>
+                      <p className="text-xl sm:text-3xl font-bold text-foreground mt-1">{stat.value}</p>
                     </div>
-                    <div className={`h-12 w-12 rounded-xl ${stat.color} flex items-center justify-center`}>
-                      <stat.icon className="h-6 w-6 text-white" />
+                    <div className={`h-8 w-8 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl ${stat.color} flex items-center justify-center`}>
+                      <stat.icon className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                     </div>
                   </div>
                 </CardContent>
@@ -267,121 +256,155 @@ const SuperAdminPanel = () => {
           )}
         </div>
 
-        {/* User Management */}
-        <Card className="border-border/50 shadow-sm">
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" />
-                  User Management
-                </CardTitle>
-                <CardDescription>
-                  View and manage user roles ({users.length} users)
-                </CardDescription>
-              </div>
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search users..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="space-y-3">
-                {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16" />)}
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Current Roles</TableHead>
-                      <TableHead>Joined</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{user.full_name || 'No name'}</p>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1.5">
-                            {user.roles.length === 0 ? (
-                              <Badge variant="outline" className="text-xs">No roles</Badge>
-                            ) : (
-                              user.roles.map(role => (
-                                <Badge
-                                  key={role}
-                                  className={`text-xs flex items-center gap-1 ${roleColors[role] || ''}`}
-                                >
-                                  {roleIcons[role]}
-                                  {role.replace('_', ' ')}
-                                </Badge>
-                              ))
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {format(new Date(user.created_at), 'MMM d, yyyy')}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Select
-                              disabled={updatingRole === user.id}
-                              onValueChange={(value) => {
-                                const [action, role] = value.split(':');
-                                handleRoleChange(user.id, role, action as 'add' | 'remove');
-                              }}
-                            >
-                              <SelectTrigger className="w-[140px]">
-                                <SelectValue placeholder="Manage roles" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {['super_admin', 'admin', 'creator', 'student'].map(role => (
-                                  user.roles.includes(role) ? (
-                                    <SelectItem key={`remove:${role}`} value={`remove:${role}`}>
-                                      Remove {role.replace('_', ' ')}
-                                    </SelectItem>
+        {/* Tabs for different sections */}
+        <Tabs defaultValue="users" className="space-y-6">
+          <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:flex">
+            <TabsTrigger value="users" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Users</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Settings</span>
+            </TabsTrigger>
+            <TabsTrigger value="footer" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <LayoutTemplate className="h-4 w-4" />
+              <span className="hidden sm:inline">Footer</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Users Tab */}
+          <TabsContent value="users">
+            <Card className="border-border/50 shadow-sm">
+              <CardHeader className="p-4 sm:p-6">
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                      User Management
+                    </CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">
+                      View and manage user roles ({users.length} users)
+                    </CardDescription>
+                  </div>
+                  <div className="relative w-full">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search users..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 text-sm"
+                    />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
+                {loading ? (
+                  <div className="space-y-3">
+                    {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16" />)}
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto -mx-4 sm:mx-0">
+                    <div className="min-w-[600px] sm:min-w-0 px-4 sm:px-0">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs sm:text-sm">User</TableHead>
+                            <TableHead className="text-xs sm:text-sm">Roles</TableHead>
+                            <TableHead className="text-xs sm:text-sm hidden sm:table-cell">Joined</TableHead>
+                            <TableHead className="text-xs sm:text-sm">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredUsers.map((user) => (
+                            <TableRow key={user.id}>
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium text-sm">{user.full_name || 'No name'}</p>
+                                  <p className="text-xs text-muted-foreground truncate max-w-[150px] sm:max-w-none">
+                                    {user.email}
+                                  </p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex flex-wrap gap-1">
+                                  {user.roles.length === 0 ? (
+                                    <Badge variant="outline" className="text-xs">No roles</Badge>
                                   ) : (
-                                    <SelectItem key={`add:${role}`} value={`add:${role}`}>
-                                      Add {role.replace('_', ' ')}
-                                    </SelectItem>
-                                  )
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {updatingRole === user.id && (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {filteredUsers.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                          No users found matching your search.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                                    user.roles.map(role => (
+                                      <Badge
+                                        key={role}
+                                        className={`text-xs flex items-center gap-1 ${roleColors[role] || ''}`}
+                                      >
+                                        {roleIcons[role]}
+                                        <span className="hidden sm:inline">{role.replace('_', ' ')}</span>
+                                      </Badge>
+                                    ))
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-muted-foreground text-xs sm:text-sm hidden sm:table-cell">
+                                {format(new Date(user.created_at), 'MMM d, yyyy')}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Select
+                                    disabled={updatingRole === user.id}
+                                    onValueChange={(value) => {
+                                      const [action, role] = value.split(':');
+                                      handleRoleChange(user.id, role, action as 'add' | 'remove');
+                                    }}
+                                  >
+                                    <SelectTrigger className="w-[100px] sm:w-[140px] text-xs sm:text-sm">
+                                      <SelectValue placeholder="Manage" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {['super_admin', 'admin', 'creator', 'student'].map(role => (
+                                        user.roles.includes(role) ? (
+                                          <SelectItem key={`remove:${role}`} value={`remove:${role}`} className="text-xs sm:text-sm">
+                                            Remove {role.replace('_', ' ')}
+                                          </SelectItem>
+                                        ) : (
+                                          <SelectItem key={`add:${role}`} value={`add:${role}`} className="text-xs sm:text-sm">
+                                            Add {role.replace('_', ' ')}
+                                          </SelectItem>
+                                        )
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  {updatingRole === user.id && (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                          {filteredUsers.length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={4} className="text-center py-8 text-muted-foreground text-sm">
+                                No users found matching your search.
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings">
+            <SiteSettingsManager />
+          </TabsContent>
+
+          {/* Footer Tab */}
+          <TabsContent value="footer">
+            <FooterContentManager />
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
