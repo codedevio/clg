@@ -36,7 +36,6 @@ import {
   Loader2,
   Crown,
   ShieldCheck,
-  User,
   GraduationCap,
   Settings,
   LayoutTemplate,
@@ -59,18 +58,25 @@ interface SystemStats {
   totalSurveyResponses: number;
 }
 
+// Role hierarchy: Creator/Superadmin (1) → Admin (many) → Student (many)
+const AVAILABLE_ROLES = ['super_admin', 'admin', 'student'] as const;
+
 const roleIcons: Record<string, React.ReactNode> = {
   super_admin: <Crown className="h-3 w-3" />,
   admin: <ShieldCheck className="h-3 w-3" />,
-  creator: <User className="h-3 w-3" />,
   student: <GraduationCap className="h-3 w-3" />,
 };
 
 const roleColors: Record<string, string> = {
   super_admin: 'bg-amber-500 text-white',
   admin: 'bg-primary text-primary-foreground',
-  creator: 'bg-accent text-accent-foreground',
   student: 'bg-muted text-muted-foreground',
+};
+
+const roleLabels: Record<string, string> = {
+  super_admin: 'Creator',
+  admin: 'Admin',
+  student: 'Student',
 };
 
 const SuperAdminPanel = () => {
@@ -331,15 +337,17 @@ const SuperAdminPanel = () => {
                                   {user.roles.length === 0 ? (
                                     <Badge variant="outline" className="text-xs">No roles</Badge>
                                   ) : (
-                                    user.roles.map(role => (
-                                      <Badge
-                                        key={role}
-                                        className={`text-xs flex items-center gap-1 ${roleColors[role] || ''}`}
-                                      >
-                                        {roleIcons[role]}
-                                        <span className="hidden sm:inline">{role.replace('_', ' ')}</span>
-                                      </Badge>
-                                    ))
+                                    user.roles
+                                      .filter(role => AVAILABLE_ROLES.includes(role as any))
+                                      .map(role => (
+                                        <Badge
+                                          key={role}
+                                          className={`text-xs flex items-center gap-1 ${roleColors[role] || ''}`}
+                                        >
+                                          {roleIcons[role]}
+                                          <span className="hidden sm:inline">{roleLabels[role] || role}</span>
+                                        </Badge>
+                                      ))
                                   )}
                                 </div>
                               </TableCell>
@@ -359,14 +367,15 @@ const SuperAdminPanel = () => {
                                       <SelectValue placeholder="Manage" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      {['super_admin', 'admin', 'creator', 'student'].map(role => (
+                                      {/* Only show admin and student options - super_admin cannot be assigned */}
+                                      {['admin', 'student'].map(role => (
                                         user.roles.includes(role) ? (
                                           <SelectItem key={`remove:${role}`} value={`remove:${role}`} className="text-xs sm:text-sm">
-                                            Remove {role.replace('_', ' ')}
+                                            Remove {roleLabels[role]}
                                           </SelectItem>
                                         ) : (
                                           <SelectItem key={`add:${role}`} value={`add:${role}`} className="text-xs sm:text-sm">
-                                            Add {role.replace('_', ' ')}
+                                            Add {roleLabels[role]}
                                           </SelectItem>
                                         )
                                       ))}
