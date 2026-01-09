@@ -115,7 +115,7 @@ const QuizResults = () => {
     return `${mins}m ${secs}s`;
   };
 
-  // Sort attempts by score (desc), then by submission time (asc), then by duration (asc)
+  // Sort attempts by score (desc), then by time taken (asc) as tie-breaker
   const getSortedAttempts = () => {
     return [...attempts].sort((a, b) => {
       // First: Compare by score (descending)
@@ -123,12 +123,7 @@ const QuizResults = () => {
       const scoreB = b.score ?? 0;
       if (scoreB !== scoreA) return scoreB - scoreA;
       
-      // Tie-breaker 1: Earlier submission time
-      const submittedA = a.submitted_at ? new Date(a.submitted_at).getTime() : Infinity;
-      const submittedB = b.submitted_at ? new Date(b.submitted_at).getTime() : Infinity;
-      if (submittedA !== submittedB) return submittedA - submittedB;
-      
-      // Tie-breaker 2: Shorter completion duration
+      // Tie-breaker: Shorter completion duration wins (faster student ranks higher)
       const durationA = a.time_spent_seconds ?? Infinity;
       const durationB = b.time_spent_seconds ?? Infinity;
       return durationA - durationB;
