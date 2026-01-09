@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
-type AppRole = 'admin' | 'super_admin' | 'creator' | 'student';
+// Role hierarchy: super_admin (Creator) → admin → student
+type AppRole = 'super_admin' | 'admin' | 'student';
 
 export const useUserRole = () => {
   const { user } = useAuth();
@@ -36,9 +37,14 @@ export const useUserRole = () => {
     fetchRoles();
   }, [user]);
 
+  // super_admin is the Creator/Superadmin (top-level, only one exists)
   const isSuperAdmin = roles.includes('super_admin');
+  // Admins have admin role OR are super_admin (hierarchy)
   const isAdmin = roles.includes('admin') || isSuperAdmin;
-  const isCreator = roles.includes('creator') || isAdmin;
+  // Creator is now super_admin (backward compatibility)
+  const isCreator = isSuperAdmin;
+  // Check if user is a student
+  const isStudent = roles.includes('student');
 
-  return { roles, loading, isSuperAdmin, isAdmin, isCreator };
+  return { roles, loading, isSuperAdmin, isAdmin, isCreator, isStudent };
 };

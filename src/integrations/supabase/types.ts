@@ -646,6 +646,13 @@ export type Database = {
       }
     }
     Functions: {
+      can_assign_role: {
+        Args: {
+          _assigner_id: string
+          _target_role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
       get_quiz_questions_for_attempt: {
         Args: { p_quiz_id: string }
         Returns: {
@@ -661,6 +668,10 @@ export type Database = {
           question_text: string
           quiz_id: string
         }[]
+      }
+      get_role_level: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: number
       }
       get_user_role: {
         Args: { _user_id: string }
