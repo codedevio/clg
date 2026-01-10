@@ -684,6 +684,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      transfer_superadmin_ownership: {
+        Args: { _new_owner_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       access_type: "public" | "password" | "batch"

@@ -27,6 +27,8 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import SiteSettingsManager from '@/components/admin/SiteSettingsManager';
 import FooterContentManager from '@/components/admin/FooterContentManager';
+import OwnershipTransfer from '@/components/admin/OwnershipTransfer';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Shield,
   Users,
@@ -39,6 +41,7 @@ import {
   GraduationCap,
   Settings,
   LayoutTemplate,
+  ShieldAlert,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -82,6 +85,7 @@ const roleLabels: Record<string, string> = {
 const SuperAdminPanel = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const { isSuperAdmin, loading: roleLoading } = useUserRole();
   
   const [users, setUsers] = useState<UserWithRoles[]>([]);
@@ -264,7 +268,7 @@ const SuperAdminPanel = () => {
 
         {/* Tabs for different sections */}
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:flex">
+          <TabsList className="w-full sm:w-auto grid grid-cols-4 sm:flex">
             <TabsTrigger value="users" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Users</span>
@@ -276,6 +280,10 @@ const SuperAdminPanel = () => {
             <TabsTrigger value="footer" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
               <LayoutTemplate className="h-4 w-4" />
               <span className="hidden sm:inline">Footer</span>
+            </TabsTrigger>
+            <TabsTrigger value="transfer" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-destructive">
+              <ShieldAlert className="h-4 w-4" />
+              <span className="hidden sm:inline">Transfer</span>
             </TabsTrigger>
           </TabsList>
 
@@ -412,6 +420,19 @@ const SuperAdminPanel = () => {
           {/* Footer Tab */}
           <TabsContent value="footer">
             <FooterContentManager />
+          </TabsContent>
+
+          {/* Transfer Ownership Tab */}
+          <TabsContent value="transfer">
+            <OwnershipTransfer
+              users={users}
+              currentUserId={user?.id || ''}
+              onTransferComplete={() => {
+                fetchData();
+                // After transfer, user is no longer super_admin, redirect
+                navigate('/dashboard');
+              }}
+            />
           </TabsContent>
         </Tabs>
       </div>
