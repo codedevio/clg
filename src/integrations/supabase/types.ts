@@ -684,6 +684,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      recalculate_quiz_attempts: {
+        Args: { p_quiz_id: string }
+        Returns: undefined
+      }
       transfer_superadmin_ownership: {
         Args: { _new_owner_id: string }
         Returns: boolean
