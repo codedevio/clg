@@ -23,6 +23,11 @@ import TakeQuiz from "./pages/TakeQuiz";
 import TakeSurvey from "./pages/TakeSurvey";
 import QuizAttemptResult from "./pages/QuizAttemptResult";
 import SuperAdminPanel from "./pages/SuperAdminPanel";
+import Documentation from "./pages/Documentation";
+import HelpCenter from "./pages/HelpCenter";
+import ContactUs from "./pages/ContactUs";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +42,11 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/docs" element={<Documentation />} />
+            <Route path="/help" element={<HelpCenter />} />
+            <Route path="/contact" element={<ContactUs />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
             <Route path="/quiz/:quizId" element={<TakeQuiz />} />
             <Route path="/quiz/result/:attemptId" element={<QuizAttemptResult />} />
             <Route path="/survey/:surveyId" element={<TakeSurvey />} />
