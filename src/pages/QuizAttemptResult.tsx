@@ -9,7 +9,6 @@ import {
   CheckCircle,
   XCircle,
   MinusCircle,
-  Trophy,
   Clock,
   Home,
   FileText,
@@ -32,9 +31,6 @@ interface QuizAttempt {
     show_results_to_students: boolean;
     total_marks: number;
     passing_percentage: number;
-    first_position_min: number;
-    second_position_min: number;
-    third_position_min: number;
   };
   student_identities: {
     full_name: string;
@@ -61,10 +57,7 @@ const QuizAttemptResult = () => {
             title,
             show_results_to_students,
             total_marks,
-            passing_percentage,
-            first_position_min,
-            second_position_min,
-            third_position_min
+            passing_percentage
           ),
           student_identities (
             full_name
@@ -92,25 +85,6 @@ const QuizAttemptResult = () => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}m ${secs}s`;
-  };
-
-  const getPosition = () => {
-    if (!attempt || attempt.percentage === null) return { label: '-', variant: 'secondary' as const, icon: null };
-    
-    const percentage = attempt.percentage;
-    const quiz = attempt.quiz;
-    
-    if (percentage >= quiz.first_position_min) {
-      return { label: '1st Position', variant: 'default' as const, icon: '🥇' };
-    } else if (percentage >= quiz.second_position_min) {
-      return { label: '2nd Position', variant: 'default' as const, icon: '🥈' };
-    } else if (percentage >= quiz.third_position_min) {
-      return { label: '3rd Position', variant: 'default' as const, icon: '🥉' };
-    } else if (percentage >= quiz.passing_percentage) {
-      return { label: 'Passed', variant: 'secondary' as const, icon: '✅' };
-    } else {
-      return { label: 'Failed', variant: 'destructive' as const, icon: '❌' };
-    }
   };
 
   if (isLoading) {
@@ -162,27 +136,23 @@ const QuizAttemptResult = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Score Circle */}
+          {/* Score Circle - Only shows marks, no rank/position */}
           <div className="flex flex-col items-center">
             <div className={`h-32 w-32 rounded-full flex items-center justify-center ${
               attempt.passed ? 'bg-accent/20' : 'bg-destructive/20'
             }`}>
               <div className="text-center">
                 <p className="text-3xl font-bold">
-                  {attempt.percentage?.toFixed(0) ?? 0}%
+                  {attempt.score ?? 0}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {attempt.score ?? 0}/{attempt.quiz?.total_marks ?? 0}
+                  out of {attempt.quiz?.total_marks ?? 0}
                 </p>
               </div>
             </div>
-            <Badge 
-              variant={getPosition().variant}
-              className="mt-4 text-base px-4 py-1"
-            >
-              <span className="mr-2">{getPosition().icon}</span>
-              {getPosition().label}
-            </Badge>
+            <p className="mt-4 text-lg text-muted-foreground">
+              {attempt.percentage?.toFixed(1) ?? 0}%
+            </p>
           </div>
 
           {/* Stats */}
