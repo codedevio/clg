@@ -360,6 +360,7 @@ export type Database = {
           second_position_min: number
           show_results_to_students: boolean
           shuffle_questions: boolean
+          single_attempt: boolean
           starts_at: string | null
           third_position_min: number
           time_limit_minutes: number
@@ -381,6 +382,7 @@ export type Database = {
           second_position_min?: number
           show_results_to_students?: boolean
           shuffle_questions?: boolean
+          single_attempt?: boolean
           starts_at?: string | null
           third_position_min?: number
           time_limit_minutes?: number
@@ -402,6 +404,7 @@ export type Database = {
           second_position_min?: number
           show_results_to_students?: boolean
           shuffle_questions?: boolean
+          single_attempt?: boolean
           starts_at?: string | null
           third_position_min?: number
           time_limit_minutes?: number

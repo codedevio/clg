@@ -66,6 +66,7 @@ const QuizEdit = () => {
     firstPositionMin: 90,
     secondPositionMin: 75,
     thirdPositionMin: 60,
+    singleAttempt: true,
   });
 
   useEffect(() => {
@@ -96,6 +97,7 @@ const QuizEdit = () => {
         firstPositionMin: quiz.first_position_min || 90,
         secondPositionMin: quiz.second_position_min || 75,
         thirdPositionMin: quiz.third_position_min || 60,
+        singleAttempt: quiz.single_attempt ?? true,
       });
 
       const { data: questionsData, error: questionsError } = await supabase
@@ -196,6 +198,7 @@ const QuizEdit = () => {
           first_position_min: settings.firstPositionMin,
           second_position_min: settings.secondPositionMin,
           third_position_min: settings.thirdPositionMin,
+          single_attempt: settings.singleAttempt,
         })
         .eq('id', quizId);
 
@@ -504,6 +507,17 @@ const QuizEdit = () => {
                   <Switch
                     checked={settings.showResultsToStudents}
                     onCheckedChange={(checked) => setSettings({ ...settings, showResultsToStudents: checked })}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-foreground">Single Attempt Only</p>
+                    <p className="text-sm text-muted-foreground">Students can only attempt this quiz once</p>
+                  </div>
+                  <Switch
+                    checked={settings.singleAttempt}
+                    onCheckedChange={(checked) => setSettings({ ...settings, singleAttempt: checked })}
                   />
                 </div>
 

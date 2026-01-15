@@ -64,6 +64,7 @@ const QuizBuilder = () => {
     firstPositionMin: 90,
     secondPositionMin: 75,
     thirdPositionMin: 60,
+    singleAttempt: true,
   });
 
   const addQuestion = () => {
@@ -136,6 +137,7 @@ const QuizBuilder = () => {
           first_position_min: settings.firstPositionMin,
           second_position_min: settings.secondPositionMin,
           third_position_min: settings.thirdPositionMin,
+          single_attempt: settings.singleAttempt,
         })
         .select()
         .single();
@@ -414,6 +416,17 @@ const QuizBuilder = () => {
                   <Switch
                     checked={settings.showResultsToStudents}
                     onCheckedChange={(checked) => setSettings({ ...settings, showResultsToStudents: checked })}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-foreground">Single Attempt Only</p>
+                    <p className="text-sm text-muted-foreground">Students can only attempt this quiz once</p>
+                  </div>
+                  <Switch
+                    checked={settings.singleAttempt}
+                    onCheckedChange={(checked) => setSettings({ ...settings, singleAttempt: checked })}
                   />
                 </div>
 
