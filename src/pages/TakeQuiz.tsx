@@ -41,6 +41,7 @@ interface Quiz {
   shuffle_questions: boolean;
   show_results_to_students: boolean;
   total_marks: number;
+  single_attempt: boolean;
 }
 
 interface StudentIdentity {
@@ -57,7 +58,7 @@ const TakeQuiz = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [stage, setStage] = useState<'identity' | 'quiz' | 'submitted'>('identity');
+  const [stage, setStage] = useState<'identity' | 'quiz' | 'submitted' | 'already_attempted'>('identity');
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,6 +78,7 @@ const TakeQuiz = () => {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [timeLeft, setTimeLeft] = useState(0);
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  const [existingAttemptId, setExistingAttemptId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchQuiz = async () => {
@@ -168,6 +170,32 @@ const TakeQuiz = () => {
     }
 
     try {
+      // Check for existing attempt if single_attempt is enabled
+      if (quiz?.single_attempt) {
+        const { data: existingIdentity } = await supabase
+          .from('student_identities')
+          .select('id')
+          .eq('roll_number', studentInfo.roll_number.trim())
+          .eq('college_id', studentInfo.college_id.trim())
+          .maybeSingle();
+
+        if (existingIdentity) {
+          const { data: existingAttempt } = await supabase
+            .from('quiz_attempts')
+            .select('id, status')
+            .eq('quiz_id', quizId)
+            .eq('student_identity_id', existingIdentity.id)
+            .in('status', ['submitted', 'auto_submitted'])
+            .maybeSingle();
+
+          if (existingAttempt) {
+            setExistingAttemptId(existingAttempt.id);
+            setStage('already_attempted');
+            return;
+          }
+        }
+      }
+
       const studentIdentityId = crypto.randomUUID();
       
       const { error: identityError } = await supabase
@@ -385,6 +413,32 @@ const TakeQuiz = () => {
             </CardContent>
           </Card>
         </div>
+      </div>
+    );
+  }
+
+  if (stage === 'already_attempted') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-md text-center animate-fade-up">
+          <CardContent className="pt-8 pb-6">
+            <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Quiz Already Attempted</h2>
+            <p className="text-muted-foreground mb-6">
+              You have already submitted this quiz. This quiz allows only one attempt per student.
+            </p>
+            <div className="flex flex-col gap-3">
+              {existingAttemptId && quiz?.show_results_to_students && (
+                <Button onClick={() => navigate(`/quiz/result/${existingAttemptId}`)}>
+                  View Your Results
+                </Button>
+              )}
+              <Button variant="outline" onClick={() => navigate('/')}>Return Home</Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
