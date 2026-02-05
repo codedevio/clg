@@ -79,6 +79,7 @@ const Quizzes = () => {
         .from('quizzes')
         .select('*')
         .eq('creator_id', user.id)
+        .eq('is_archived', false)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -123,11 +124,14 @@ const Quizzes = () => {
     if (!deleteId) return;
     
     try {
-      const { error } = await supabase.from('quizzes').delete().eq('id', deleteId);
+      const { error } = await supabase
+        .from('quizzes')
+        .update({ is_archived: true, archived_at: new Date().toISOString() })
+        .eq('id', deleteId);
       if (error) throw error;
       
       setQuizzes(quizzes.filter(q => q.id !== deleteId));
-      toast({ title: 'Quiz deleted', description: 'Quiz has been permanently deleted.' });
+      toast({ title: 'Quiz archived', description: 'Quiz has been archived. All results and history are preserved.' });
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Error', description: error.message });
     } finally {
@@ -299,7 +303,7 @@ const Quizzes = () => {
                             className="text-destructive focus:text-destructive"
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
+                            Archive
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -316,15 +320,15 @@ const Quizzes = () => {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Quiz?</AlertDialogTitle>
+            <AlertDialogTitle>Archive Quiz?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the quiz and all associated data including questions, attempts, and responses.
+              This will archive the quiz and hide it from your list. All past results, attempts, and history will be preserved and can be restored later.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+            <AlertDialogAction onClick={handleDelete}>
+              Archive
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

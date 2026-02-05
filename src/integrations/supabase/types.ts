@@ -242,10 +242,12 @@ export type Database = {
       }
       quiz_questions: {
         Row: {
+          archived_at: string | null
           correct_option: string
           created_at: string
           difficulty: Database["public"]["Enums"]["difficulty_level"]
           id: string
+          is_archived: boolean
           marks: number
           option_a: string
           option_b: string
@@ -256,10 +258,12 @@ export type Database = {
           quiz_id: string
         }
         Insert: {
+          archived_at?: string | null
           correct_option: string
           created_at?: string
           difficulty?: Database["public"]["Enums"]["difficulty_level"]
           id?: string
+          is_archived?: boolean
           marks?: number
           option_a: string
           option_b: string
@@ -270,10 +274,12 @@ export type Database = {
           quiz_id: string
         }
         Update: {
+          archived_at?: string | null
           correct_option?: string
           created_at?: string
           difficulty?: Database["public"]["Enums"]["difficulty_level"]
           id?: string
+          is_archived?: boolean
           marks?: number
           option_a?: string
           option_b?: string
@@ -347,12 +353,14 @@ export type Database = {
       }
       quizzes: {
         Row: {
+          archived_at: string | null
           created_at: string
           creator_id: string
           description: string | null
           ends_at: string | null
           first_position_min: number
           id: string
+          is_archived: boolean
           is_published: boolean
           max_attempts: number | null
           negative_marking: boolean
@@ -369,12 +377,14 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           creator_id: string
           description?: string | null
           ends_at?: string | null
           first_position_min?: number
           id?: string
+          is_archived?: boolean
           is_published?: boolean
           max_attempts?: number | null
           negative_marking?: boolean
@@ -391,12 +401,14 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           creator_id?: string
           description?: string | null
           ends_at?: string | null
           first_position_min?: number
           id?: string
+          is_archived?: boolean
           is_published?: boolean
           max_attempts?: number | null
           negative_marking?: boolean
