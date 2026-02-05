@@ -104,6 +104,7 @@ const QuizEdit = () => {
         .from('quiz_questions')
         .select('*')
         .eq('quiz_id', quizId)
+        .eq('is_archived', false)
         .order('order_index');
 
       if (questionsError) throw questionsError;
@@ -208,7 +209,7 @@ const QuizEdit = () => {
       if (deletedQuestionIds.length > 0) {
         await supabase
           .from('quiz_questions')
-          .delete()
+          .update({ is_archived: true, archived_at: new Date().toISOString() })
           .in('id', deletedQuestionIds);
       }
 
