@@ -66,7 +66,7 @@ const QuizEdit = () => {
     firstPositionMin: 90,
     secondPositionMin: 75,
     thirdPositionMin: 60,
-    singleAttempt: true,
+    maxAttempts: 1 as number | null,
   });
 
   useEffect(() => {
@@ -97,7 +97,7 @@ const QuizEdit = () => {
         firstPositionMin: quiz.first_position_min || 90,
         secondPositionMin: quiz.second_position_min || 75,
         thirdPositionMin: quiz.third_position_min || 60,
-        singleAttempt: quiz.single_attempt ?? true,
+        maxAttempts: quiz.max_attempts,
       });
 
       const { data: questionsData, error: questionsError } = await supabase
@@ -198,7 +198,7 @@ const QuizEdit = () => {
           first_position_min: settings.firstPositionMin,
           second_position_min: settings.secondPositionMin,
           third_position_min: settings.thirdPositionMin,
-          single_attempt: settings.singleAttempt,
+          max_attempts: settings.maxAttempts,
         })
         .eq('id', quizId);
 
@@ -512,13 +512,23 @@ const QuizEdit = () => {
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-foreground">Single Attempt Only</p>
-                    <p className="text-sm text-muted-foreground">Students can only attempt this quiz once</p>
+                    <p className="font-medium text-foreground">Attempt Limit</p>
+                    <p className="text-sm text-muted-foreground">Maximum number of attempts allowed per student</p>
                   </div>
-                  <Switch
-                    checked={settings.singleAttempt}
-                    onCheckedChange={(checked) => setSettings({ ...settings, singleAttempt: checked })}
-                  />
+                  <select
+                    value={settings.maxAttempts === null ? 'unlimited' : settings.maxAttempts.toString()}
+                    onChange={(e) => setSettings({ 
+                      ...settings, 
+                      maxAttempts: e.target.value === 'unlimited' ? null : parseInt(e.target.value) 
+                    })}
+                    className="h-10 px-3 rounded-lg border border-input bg-background text-sm min-w-[140px]"
+                  >
+                    <option value="1">1 Attempt</option>
+                    <option value="2">2 Attempts</option>
+                    <option value="3">3 Attempts</option>
+                    <option value="5">5 Attempts</option>
+                    <option value="unlimited">Unlimited</option>
+                  </select>
                 </div>
 
                 <div className="flex items-center justify-between">

@@ -41,7 +41,7 @@ interface Quiz {
   shuffle_questions: boolean;
   show_results_to_students: boolean;
   total_marks: number;
-  single_attempt: boolean;
+  max_attempts: number | null;
 }
 
 interface StudentIdentity {
@@ -171,7 +171,7 @@ const TakeQuiz = () => {
 
     try {
       // Check for existing attempt if single_attempt is enabled
-      if (quiz?.single_attempt) {
+      if (quiz?.max_attempts !== null) {
         const { data: existingIdentity } = await supabase
           .from('student_identities')
           .select('id')
@@ -180,16 +180,18 @@ const TakeQuiz = () => {
           .maybeSingle();
 
         if (existingIdentity) {
-          const { data: existingAttempt } = await supabase
+          const { data: existingAttempts, count } = await supabase
             .from('quiz_attempts')
-            .select('id, status')
+            .select('id, status', { count: 'exact' })
             .eq('quiz_id', quizId)
             .eq('student_identity_id', existingIdentity.id)
-            .in('status', ['submitted', 'auto_submitted'])
-            .maybeSingle();
+            .in('status', ['submitted', 'auto_submitted']);
 
-          if (existingAttempt) {
-            setExistingAttemptId(existingAttempt.id);
+          if (count !== null && count >= quiz.max_attempts) {
+            // Get the most recent attempt for viewing results
+            if (existingAttempts && existingAttempts.length > 0) {
+              setExistingAttemptId(existingAttempts[0].id);
+            }
             setStage('already_attempted');
             return;
           }
@@ -425,14 +427,15 @@ const TakeQuiz = () => {
             <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h2 className="text-2xl font-bold mb-2">Quiz Already Attempted</h2>
+            <h2 className="text-2xl font-bold mb-2">Attempt Limit Reached</h2>
             <p className="text-muted-foreground mb-6">
-              You have already submitted this quiz. This quiz allows only one attempt per student.
+              You have reached the maximum number of attempts allowed for this quiz
+              {quiz?.max_attempts ? ` (${quiz.max_attempts} attempt${quiz.max_attempts > 1 ? 's' : ''})` : ''}.
             </p>
             <div className="flex flex-col gap-3">
               {existingAttemptId && quiz?.show_results_to_students && (
                 <Button onClick={() => navigate(`/quiz/result/${existingAttemptId}`)}>
-                  View Your Results
+                  View Your Latest Result
                 </Button>
               )}
               <Button variant="outline" onClick={() => navigate('/')}>Return Home</Button>
