@@ -354,13 +354,13 @@ export type Database = {
           first_position_min: number
           id: string
           is_published: boolean
+          max_attempts: number | null
           negative_marking: boolean
           negative_marks_per_wrong: number | null
           passing_percentage: number
           second_position_min: number
           show_results_to_students: boolean
           shuffle_questions: boolean
-          single_attempt: boolean
           starts_at: string | null
           third_position_min: number
           time_limit_minutes: number
@@ -376,13 +376,13 @@ export type Database = {
           first_position_min?: number
           id?: string
           is_published?: boolean
+          max_attempts?: number | null
           negative_marking?: boolean
           negative_marks_per_wrong?: number | null
           passing_percentage?: number
           second_position_min?: number
           show_results_to_students?: boolean
           shuffle_questions?: boolean
-          single_attempt?: boolean
           starts_at?: string | null
           third_position_min?: number
           time_limit_minutes?: number
@@ -398,13 +398,13 @@ export type Database = {
           first_position_min?: number
           id?: string
           is_published?: boolean
+          max_attempts?: number | null
           negative_marking?: boolean
           negative_marks_per_wrong?: number | null
           passing_percentage?: number
           second_position_min?: number
           show_results_to_students?: boolean
           shuffle_questions?: boolean
-          single_attempt?: boolean
           starts_at?: string | null
           third_position_min?: number
           time_limit_minutes?: number
