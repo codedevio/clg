@@ -89,7 +89,7 @@ const Quizzes = () => {
         data.map(async (quiz) => {
           const [attemptsRes, questionsRes] = await Promise.all([
             supabase.from('quiz_attempts').select('id', { count: 'exact', head: true }).eq('quiz_id', quiz.id),
-            supabase.from('quiz_questions').select('id', { count: 'exact', head: true }).eq('quiz_id', quiz.id),
+            supabase.from('quiz_questions').select('id', { count: 'exact', head: true }).eq('quiz_id', quiz.id).eq('is_archived', false),
           ]);
           
           return {
