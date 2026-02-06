@@ -9,6 +9,17 @@ export default defineConfig({
     port: 8080,
     allowedHosts: ["quizorax-clg.onrender.com", "quizorax.codedevio.in"]
   },
+  preview: {
+    port: 4173,
+    strictPort: false,
+    host: "0.0.0.0"
+  },
+  build: {
+    outDir: "dist",
+    sourcemap: false,
+    minify: "terser",
+    chunkSizeWarningLimit: 1000
+  },
   plugins: [react()],
   resolve: {
     alias: {

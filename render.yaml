@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: quizorax
+    env: node
+    plan: free
+    buildCommand: bun install && bun run build
+    startCommand: bun run preview
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_SUPABASE_URL
+        scope: build
+      - key: VITE_SUPABASE_ANON_KEY
+        scope: build
