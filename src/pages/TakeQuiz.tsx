@@ -125,7 +125,8 @@ const TakeQuiz = () => {
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          handleSubmit();
+          // Call handleSubmit here needs special handling since it's a callback
+          // We'll let the time auto-submit via the next condition below
           return 0;
         }
         return prev - 1;
@@ -133,7 +134,14 @@ const TakeQuiz = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [stage, timeLeft]);
+  }, [stage]);
+
+  // Auto-submit when time runs out
+  useEffect(() => {
+    if (stage === 'quiz' && timeLeft === 0 && attemptId) {
+      handleSubmit();
+    }
+  }, [timeLeft, stage, attemptId, handleSubmit]);
 
   useEffect(() => {
     if (stage !== 'quiz') return;
@@ -170,47 +178,51 @@ const TakeQuiz = () => {
     }
 
     try {
-      // Check for existing attempt if single_attempt is enabled
-      if (quiz?.max_attempts !== null) {
-        const { data: existingIdentity } = await supabase
+      // First, check if student identity already exists
+      let studentIdentityId: string | null = null;
+      const { data: existingIdentity } = await supabase
+        .from('student_identities')
+        .select('id')
+        .eq('roll_number', studentInfo.roll_number.trim())
+        .eq('college_id', studentInfo.college_id.trim())
+        .maybeSingle();
+
+      if (existingIdentity) {
+        studentIdentityId = existingIdentity.id;
+      } else {
+        // Create new identity only if it doesn't exist
+        studentIdentityId = crypto.randomUUID();
+        const { error: identityError } = await supabase
           .from('student_identities')
-          .select('id')
-          .eq('roll_number', studentInfo.roll_number.trim())
-          .eq('college_id', studentInfo.college_id.trim())
-          .maybeSingle();
+          .insert({
+            id: studentIdentityId,
+            full_name: studentInfo.full_name,
+            roll_number: studentInfo.roll_number,
+            batch: studentInfo.batch,
+            college_id: studentInfo.college_id,
+          });
 
-        if (existingIdentity) {
-          const { data: existingAttempts, count } = await supabase
-            .from('quiz_attempts')
-            .select('id, status', { count: 'exact' })
-            .eq('quiz_id', quizId)
-            .eq('student_identity_id', existingIdentity.id)
-            .in('status', ['submitted', 'auto_submitted']);
-
-          if (count !== null && count >= quiz.max_attempts) {
-            // Get the most recent attempt for viewing results
-            if (existingAttempts && existingAttempts.length > 0) {
-              setExistingAttemptId(existingAttempts[0].id);
-            }
-            setStage('already_attempted');
-            return;
-          }
-        }
+        if (identityError) throw identityError;
       }
 
-      const studentIdentityId = crypto.randomUUID();
-      
-      const { error: identityError } = await supabase
-        .from('student_identities')
-        .insert({
-          id: studentIdentityId,
-          full_name: studentInfo.full_name,
-          roll_number: studentInfo.roll_number,
-          batch: studentInfo.batch,
-          college_id: studentInfo.college_id,
-        });
+      // Check for existing attempts if max_attempts is set
+      if (quiz?.max_attempts !== null && studentIdentityId) {
+        const { data: existingAttempts, count } = await supabase
+          .from('quiz_attempts')
+          .select('id, status', { count: 'exact' })
+          .eq('quiz_id', quizId)
+          .eq('student_identity_id', studentIdentityId)
+          .in('status', ['submitted', 'auto_submitted']);
 
-      if (identityError) throw identityError;
+        if (count !== null && count >= quiz.max_attempts) {
+          // Get the most recent attempt for viewing results
+          if (existingAttempts && existingAttempts.length > 0) {
+            setExistingAttemptId(existingAttempts[0].id);
+          }
+          setStage('already_attempted');
+          return;
+        }
+      }
 
       const newAttemptId = crypto.randomUUID();
       const newAttemptToken = crypto.randomUUID();
@@ -280,7 +292,7 @@ const TakeQuiz = () => {
     } finally {
       setSubmitting(false);
     }
-  }, [attemptId, answers, quiz, timeLeft, tabSwitchCount, submitting, toast]);
+  }, [attemptId, answers, quiz, timeLeft, tabSwitchCount, toast]);
 
   const getQuestionText = (q: Question) => {
     if (language === 'hi' && q.question_text_hindi) {

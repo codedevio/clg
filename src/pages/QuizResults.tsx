@@ -159,7 +159,7 @@ const QuizResults = () => {
     const submitted = attempts.filter(a => a.status === 'submitted' || a.status === 'auto_submitted');
     const scores = submitted.map(a => a.percentage || 0);
     const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
-    const passCount = submitted.filter(a => a.passed).length;
+    const passCount = submitted.filter(a => a.passed === true).length;
     const passRate = submitted.length > 0 ? (passCount / submitted.length) * 100 : 0;
     
     return {

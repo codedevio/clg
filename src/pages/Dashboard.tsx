@@ -60,18 +60,35 @@ const Dashboard = () => {
           .limit(5);
 
         // Get counts
+        const quizIds = (quizzesData || []).map(q => q.id);
+        const surveyIds = (surveysData || []).map(s => s.id);
+        
         const [quizCount, surveyCount, quizAttemptsCount, surveyResponsesCount] = await Promise.all([
           supabase.from('quizzes').select('id', { count: 'exact', head: true }).eq('creator_id', user.id),
           supabase.from('surveys').select('id', { count: 'exact', head: true }).eq('creator_id', user.id),
-          supabase.from('quiz_attempts').select('id, quiz_id', { count: 'exact' }).in('quiz_id', 
-            (quizzesData || []).map(q => q.id)
-          ),
-          supabase.from('survey_responses').select('id, survey_id', { count: 'exact' }).in('survey_id', 
-            (surveysData || []).map(s => s.id)
-          ),
+          quizIds.length > 0 
+            ? supabase.from('quiz_attempts').select('id, quiz_id', { count: 'exact' }).in('quiz_id', quizIds)
+            : Promise.resolve({ count: 0 }),
+          surveyIds.length > 0
+            ? supabase.from('survey_responses').select('id, survey_id', { count: 'exact' }).in('survey_id', surveyIds)
+            : Promise.resolve({ count: 0 }),
         ]);
 
         const totalResponses = (quizAttemptsCount.count || 0) + (surveyResponsesCount.count || 0);
+        
+        // Calculate average completion percentage from quiz attempts that were submitted
+        let avgCompletion = 0;
+        if (quizIds.length > 0) {
+          const { data: submittedAttempts } = await supabase
+            .from('quiz_attempts')
+            .select('percentage')
+            .in('quiz_id', quizIds)
+            .in('status', ['submitted', 'auto_submitted']);
+          
+          avgCompletion = submittedAttempts && submittedAttempts.length > 0
+            ? Math.round(submittedAttempts.reduce((sum, a) => sum + (a.percentage || 0), 0) / submittedAttempts.length)
+            : 0;
+        }
 
         setQuizzes(quizzesData || []);
         setSurveys(surveysData || []);
@@ -79,7 +96,7 @@ const Dashboard = () => {
           totalQuizzes: quizCount.count || 0,
           totalSurveys: surveyCount.count || 0,
           totalResponses,
-          avgCompletion: totalResponses > 0 ? 85 : 0,
+          avgCompletion,
         });
       } catch (error) {
         console.error('Error fetching dashboard data:', error);

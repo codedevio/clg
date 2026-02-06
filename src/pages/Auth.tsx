@@ -104,9 +104,13 @@ const Auth = () => {
     } else {
       toast({
         title: 'Account created!',
-        description: 'Welcome to QuizoraX. You can now access your dashboard.',
+        description: 'Please verify your email to complete signup. Check your inbox for a verification link.',
       });
-      navigate('/dashboard');
+      setActiveTab('signin');
+      // Clear form
+      setEmail('');
+      setPassword('');
+      setFullName('');
     }
   };
 
