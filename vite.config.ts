@@ -7,6 +7,7 @@ export default defineConfig({
   server: {
     host: "::",
     port: 8080,
+    allowedHosts: ["quizorax-clg.onrender.com", "quizorax.codedevio.in"]
   },
   plugins: [react()],
   resolve: {

@@ -83,7 +83,7 @@ const Footer = () => {
             © {new Date().getFullYear()} {content.brand_name}. {content.copyright_text}
           </p>
           <p className="text-xs sm:text-sm text-primary-foreground/50 text-center sm:text-right">
-            {content.tagline}
+            {content.tagline}, by Codedevio.
           </p>
         </div>
       </div>
