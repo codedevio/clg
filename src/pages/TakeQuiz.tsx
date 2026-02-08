@@ -136,12 +136,7 @@ const TakeQuiz = () => {
     return () => clearInterval(timer);
   }, [stage]);
 
-  // Auto-submit when time runs out
-  useEffect(() => {
-    if (stage === 'quiz' && timeLeft === 0 && attemptId) {
-      handleSubmit();
-    }
-  }, [timeLeft, stage, attemptId, handleSubmit]);
+
 
   useEffect(() => {
     if (stage !== 'quiz') return;
@@ -293,6 +288,13 @@ const TakeQuiz = () => {
       setSubmitting(false);
     }
   }, [attemptId, answers, quiz, timeLeft, tabSwitchCount, toast]);
+
+  // Auto-submit when time runs out
+  useEffect(() => {
+    if (stage === 'quiz' && timeLeft === 0 && attemptId) {
+      handleSubmit();
+    }
+  }, [timeLeft, stage, attemptId, handleSubmit]);
 
   const getQuestionText = (q: Question) => {
     if (language === 'hi' && q.question_text_hindi) {
