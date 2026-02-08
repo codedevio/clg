@@ -3,11 +3,22 @@ services:
     name: quizorax
     env: node
     plan: free
+    runtime: node
     buildCommand: bun install && bun run build
     startCommand: bun run preview
     staticPublishPath: ./dist
+    healthCheckPath: /
+    domains:
+      - quizorax.codedevio.in
+      - quizorax.onrender.com
     envVars:
       - key: VITE_SUPABASE_URL
         scope: build
+        value: ${VITE_SUPABASE_URL}
       - key: VITE_SUPABASE_ANON_KEY
         scope: build
+        value: ${VITE_SUPABASE_ANON_KEY}
+      - key: VITE_API_URL
+        scope: build
+        value: ${VITE_API_URL}
+    preDeployCommand: bun install

@@ -4,8 +4,32 @@
   "installCommand": "bun install",
   "framework": "vite",
   "outputDirectory": "dist",
+  "regions": ["iad1"],
   "env": {
     "VITE_SUPABASE_URL": "@VITE_SUPABASE_URL",
-    "VITE_SUPABASE_ANON_KEY": "@VITE_SUPABASE_ANON_KEY"
-  }
+    "VITE_SUPABASE_ANON_KEY": "@VITE_SUPABASE_ANON_KEY",
+    "VITE_API_URL": "@VITE_API_URL"
+  },
+  "domains": [
+    "quizorax.codedevio.in",
+    "quizorax.vercel.app"
+  ],
+  "git": {
+    "deploymentEnabled": true
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, must-revalidate"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    }
+  ]
 }
