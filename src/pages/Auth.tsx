@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SEO } from '@/components/SEO';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,7 +22,7 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
-  
+
   const { signIn, signUp, resetPassword, user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -34,26 +35,26 @@ const Auth = () => {
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string; name?: string } = {};
-    
+
     const emailResult = emailSchema.safeParse(email);
     if (!emailResult.success) {
       newErrors.email = emailResult.error.errors[0].message;
     }
-    
+
     if (activeTab !== 'forgot') {
       const passwordResult = passwordSchema.safeParse(password);
       if (!passwordResult.success) {
         newErrors.password = passwordResult.error.errors[0].message;
       }
     }
-    
+
     if (activeTab === 'signup') {
       const nameResult = nameSchema.safeParse(fullName);
       if (!nameResult.success) {
         newErrors.name = nameResult.error.errors[0].message;
       }
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -61,16 +62,16 @@ const Auth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-    
+
     setIsLoading(true);
     const { error } = await signIn(email, password);
     setIsLoading(false);
-    
+
     if (error) {
       toast({
         variant: 'destructive',
         title: 'Sign in failed',
-        description: error.message === 'Invalid login credentials' 
+        description: error.message === 'Invalid login credentials'
           ? 'Invalid email or password. Please try again.'
           : error.message,
       });
@@ -86,16 +87,16 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-    
+
     setIsLoading(true);
     const { error } = await signUp(email, password, fullName);
     setIsLoading(false);
-    
+
     if (error) {
       const errorMessage = error.message.includes('already registered')
         ? 'This email is already registered. Please sign in instead.'
         : error.message;
-      
+
       toast({
         variant: 'destructive',
         title: 'Sign up failed',
@@ -117,11 +118,11 @@ const Auth = () => {
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-    
+
     setIsLoading(true);
     const { error } = await resetPassword(email);
     setIsLoading(false);
-    
+
     if (error) {
       toast({
         variant: 'destructive',
@@ -147,6 +148,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEO title="Sign In or Sign Up | Quizorax" description="Login to your Quizorax account or create a new one to start making quizzes." />
       {/* Header */}
       <header className="p-4 sm:p-6">
         <Button variant="ghost" onClick={() => navigate('/')} className="gap-2">

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
+import { SEO } from '@/components/SEO';
 import { supabase } from '@/integrations/supabase/client';
 import { GraduationCap, Clock, AlertTriangle, ChevronLeft, ChevronRight, Send, Loader2, Languages } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -57,21 +58,21 @@ const TakeQuiz = () => {
   const { quizId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [stage, setStage] = useState<'identity' | 'quiz' | 'submitted' | 'already_attempted'>('identity');
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [language, setLanguage] = useState<Language>('en');
-  
+
   const [studentInfo, setStudentInfo] = useState<StudentIdentity>({
     full_name: '',
     roll_number: '',
     batch: '',
     college_id: '',
   });
-  
+
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [attemptToken, setAttemptToken] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -83,7 +84,7 @@ const TakeQuiz = () => {
   useEffect(() => {
     const fetchQuiz = async () => {
       if (!quizId) return;
-      
+
       try {
         const { data: quizData, error: quizError } = await supabase
           .from('quizzes')
@@ -93,19 +94,19 @@ const TakeQuiz = () => {
           .single();
 
         if (quizError) throw quizError;
-        
+
         setQuiz(quizData);
 
         const { data: questionsData, error: questionsError } = await supabase
           .rpc('get_quiz_questions_for_attempt', { p_quiz_id: quizId });
 
         if (questionsError) throw questionsError;
-        
+
         let shuffledQuestions = questionsData || [];
         if (quizData.shuffle_questions) {
           shuffledQuestions = [...shuffledQuestions].sort(() => Math.random() - 0.5);
         }
-        
+
         setQuestions(shuffledQuestions);
         setTimeLeft(quizData.time_limit_minutes * 60);
       } catch (error: any) {
@@ -262,7 +263,7 @@ const TakeQuiz = () => {
       }
 
       const timeSpent = quiz ? (quiz.time_limit_minutes * 60) - timeLeft : 0;
-      
+
       await supabase
         .from('quiz_attempts')
         .update({
@@ -306,7 +307,7 @@ const TakeQuiz = () => {
   const getOptionText = (q: Question, option: 'A' | 'B' | 'C' | 'D') => {
     const optionKey = `option_${option.toLowerCase()}` as keyof Question;
     const hindiKey = `option_${option.toLowerCase()}_hindi` as keyof Question;
-    
+
     if (language === 'hi' && q[hindiKey]) {
       return q[hindiKey] as string;
     }
@@ -319,6 +320,7 @@ const TakeQuiz = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
+        <SEO title="Loading Quiz... | Quizorax" />
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -342,6 +344,7 @@ const TakeQuiz = () => {
   if (stage === 'identity') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <SEO title={`${quiz.title} | Quizorax`} description={quiz.description || "Take this quiz on Quizorax"} />
         <div className="w-full max-w-lg animate-fade-up">
           <div className="flex items-center justify-center gap-3 mb-8">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
@@ -436,6 +439,7 @@ const TakeQuiz = () => {
   if (stage === 'already_attempted') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <SEO title="Attempt Limit Reached | Quizorax" />
         <Card className="max-w-md text-center animate-fade-up">
           <CardContent className="pt-8 pb-6">
             <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
@@ -463,6 +467,7 @@ const TakeQuiz = () => {
   if (stage === 'submitted') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <SEO title="Quiz Submitted | Quizorax" />
         <Card className="max-w-md text-center animate-fade-up">
           <CardContent className="pt-8 pb-6">
             <div className="h-16 w-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
@@ -492,6 +497,7 @@ const TakeQuiz = () => {
 
   return (
     <div className="min-h-screen bg-background pb-32">
+      <SEO title={`${quiz.title} | Quizorax`} description={quiz.description || "Take this quiz on Quizorax"} />
       <header className="sticky top-0 z-50 bg-card border-b border-border">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
@@ -501,13 +507,13 @@ const TakeQuiz = () => {
               </div>
               <span className="font-semibold text-foreground hidden sm:inline">{quiz.title}</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-sm">
                 <Languages className="h-4 w-4" />
                 <span>{language === 'en' ? 'EN' : 'HI'}</span>
               </div>
-              
+
               <div className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-lg font-bold",
                 isLowTime ? 'bg-destructive/10 text-destructive animate-pulse' : 'bg-muted'
@@ -541,7 +547,7 @@ const TakeQuiz = () => {
           <CardContent className="space-y-3">
             {(['A', 'B', 'C', 'D'] as const).map((option) => {
               const isSelected = answers[question.id] === option;
-              
+
               return (
                 <button
                   key={option}
@@ -593,7 +599,7 @@ const TakeQuiz = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between max-w-3xl mx-auto">
             <Button

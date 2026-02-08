@@ -1,4 +1,5 @@
 import { Shield, Eye, Lock, Bell, Trash2, Globe } from "lucide-react";
+import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import StaticPageLayout from "@/components/layout/StaticPageLayout";
 
@@ -91,6 +92,7 @@ Quiz and survey responses are retained according to the settings configured by q
       title="Privacy Policy"
       subtitle="Last updated: January 11, 2026"
     >
+      <SEO title="Privacy Policy | Quizorax" description="Read our privacy policy to understand how we collect, use, and protect your data." />
       <div className="space-y-6">
         {/* Introduction */}
         <Card className="bg-gradient-card border shadow-elegant">

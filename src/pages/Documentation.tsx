@@ -1,4 +1,5 @@
 import { Book, FileText, Code, Lightbulb, ArrowRight } from "lucide-react";
+import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import StaticPageLayout from "@/components/layout/StaticPageLayout";
@@ -56,6 +57,7 @@ const Documentation = () => {
       title="Documentation"
       subtitle="Everything you need to know about using our platform effectively."
     >
+      <SEO title="Documentation | Quizorax" description="Learn how to use Quizorax to create quizzes and surveys." />
       <div className="space-y-8">
         {/* Quick Links */}
         <Card className="bg-gradient-card border shadow-elegant">

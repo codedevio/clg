@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { GraduationCap, AlertTriangle, Send, Loader2, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SEO } from '@/components/SEO';
 
 interface SurveyQuestion {
   id: string;
@@ -31,13 +32,13 @@ const TakeSurvey = () => {
   const { surveyId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [survey, setSurvey] = useState<Survey | null>(null);
   const [questions, setQuestions] = useState<SurveyQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  
+
   const [respondentName, setRespondentName] = useState('');
   const [respondentEmail, setRespondentEmail] = useState('');
   const [responses, setResponses] = useState<Record<string, string | string[]>>({});
@@ -45,7 +46,7 @@ const TakeSurvey = () => {
   useEffect(() => {
     const fetchSurvey = async () => {
       if (!surveyId) return;
-      
+
       try {
         const { data: surveyData, error: surveyError } = await supabase
           .from('surveys')
@@ -55,7 +56,7 @@ const TakeSurvey = () => {
           .single();
 
         if (surveyError) throw surveyError;
-        
+
         setSurvey(surveyData);
 
         const { data: questionsData, error: questionsError } = await supabase
@@ -65,7 +66,7 @@ const TakeSurvey = () => {
           .order('order_index');
 
         if (questionsError) throw questionsError;
-        
+
         setQuestions(questionsData?.map(q => ({
           ...q,
           options: q.options as string[] | null
@@ -142,6 +143,7 @@ const TakeSurvey = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
+        <SEO title="Loading Survey... | Quizorax" />
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -150,6 +152,7 @@ const TakeSurvey = () => {
   if (!survey) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
+        <SEO title="Survey Not Found | Quizorax" />
         <Card className="max-w-md">
           <CardContent className="pt-6 text-center">
             <AlertTriangle className="h-12 w-12 mx-auto text-destructive mb-4" />
@@ -165,6 +168,7 @@ const TakeSurvey = () => {
   if (submitted) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <SEO title="Survey Submitted | Quizorax" />
         <Card className="max-w-md text-center animate-fade-up">
           <CardContent className="pt-8 pb-6">
             <div className="h-16 w-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
@@ -183,6 +187,7 @@ const TakeSurvey = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title={`${survey.title} | Quizorax`} description={survey.description || "Take this survey on Quizorax"} />
       {/* Header */}
       <header className="bg-card border-b border-border">
         <div className="container mx-auto px-4 py-4">

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEO } from "@/components/SEO";
 import { Mail, Phone, MapPin, Send, Clock } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,10 +16,10 @@ const ContactUs = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     // Simulate form submission
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    
+
     toast.success("Message sent successfully! We'll get back to you soon.");
     setIsSubmitting(false);
     (e.target as HTMLFormElement).reset();
@@ -56,6 +57,7 @@ const ContactUs = () => {
       title="Contact Us"
       subtitle="Have questions? We're here to help. Reach out to our team."
     >
+      <SEO title="Contact Us | Quizorax" description="Get in touch with the Quizorax team." />
       <div className="grid gap-8 lg:grid-cols-3">
         {/* Contact Form */}
         <div className="lg:col-span-2">

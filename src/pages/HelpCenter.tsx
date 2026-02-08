@@ -1,4 +1,5 @@
 import { Search, MessageCircle, HelpCircle, BookOpen, Users, Settings } from "lucide-react";
+import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ const HelpCenter = () => {
       title="Help Center"
       subtitle="Find answers to common questions and get the support you need."
     >
+      <SEO title="Help Center | Quizorax" description="Find answers to common questions and get support for Quizorax." />
       <div className="space-y-8">
         {/* Search Bar */}
         <Card className="bg-gradient-card border shadow-elegant">

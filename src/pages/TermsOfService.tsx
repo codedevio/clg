@@ -1,4 +1,5 @@
 import { FileText, Users, AlertTriangle, Scale, Ban, RefreshCw } from "lucide-react";
+import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import StaticPageLayout from "@/components/layout/StaticPageLayout";
 
@@ -98,6 +99,7 @@ Changes become effective immediately upon posting unless otherwise stated.`,
       title="Terms of Service"
       subtitle="Last updated: January 11, 2026"
     >
+      <SEO title="Terms of Service | Quizorax" description="Read our terms of service to understand the rules and regulations for using Quizorax." />
       <div className="space-y-6">
         {/* Introduction */}
         <Card className="bg-gradient-card border shadow-elegant">
