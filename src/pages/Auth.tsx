@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,35 +16,56 @@ const passwordSchema = z.string().min(6, 'Password must be at least 6 characters
 const nameSchema = z.string().min(2, 'Name must be at least 2 characters');
 
 const Auth = () => {
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<'signin' | 'signup' | 'forgot'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
+  const [isResetPasswordMode, setIsResetPasswordMode] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string; name?: string }>({});
   
   const { signIn, signUp, resetPassword, user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!loading && user) {
+    // Check if we're in reset password mode
+    if (location.pathname === '/auth/reset-password' || window.location.hash.includes('type=recovery')) {
+      setIsResetPasswordMode(true);
+      setActiveTab('signin'); // Reset to avoid tab conflicts
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!loading && user && !isResetPasswordMode) {
       navigate('/dashboard');
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, isResetPasswordMode]);
 
   const validateForm = () => {
-    const newErrors: { email?: string; password?: string; name?: string } = {};
+    const newErrors: { email?: string; password?: string; confirmPassword?: string; name?: string } = {};
     
     const emailResult = emailSchema.safeParse(email);
     if (!emailResult.success) {
       newErrors.email = emailResult.error.errors[0].message;
     }
     
-    if (activeTab !== 'forgot') {
+    if (activeTab !== 'forgot' && !isResetPasswordMode) {
       const passwordResult = passwordSchema.safeParse(password);
       if (!passwordResult.success) {
         newErrors.password = passwordResult.error.errors[0].message;
+      }
+    }
+    
+    if (isResetPasswordMode) {
+      const passwordResult = passwordSchema.safeParse(password);
+      if (!passwordResult.success) {
+        newErrors.password = passwordResult.error.errors[0].message;
+      }
+      if (password !== confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
       }
     }
     
@@ -137,6 +159,40 @@ const Auth = () => {
     }
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      setErrors({ confirmPassword: 'Passwords do not match' });
+      return;
+    }
+    
+    const passwordResult = passwordSchema.safeParse(password);
+    if (!passwordResult.success) {
+      setErrors({ password: passwordResult.error.errors[0].message });
+      return;
+    }
+    
+    setIsLoading(true);
+    const { error } = await supabase.auth.updateUser({ password });
+    setIsLoading(false);
+    
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Password reset failed',
+        description: error.message,
+      });
+    } else {
+      toast({
+        title: 'Password updated!',
+        description: 'Your password has been successfully reset.',
+      });
+      setIsResetPasswordMode(false);
+      navigate('/dashboard');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -169,11 +225,13 @@ const Auth = () => {
           <Card className="border-border/50 shadow-elegant bg-card">
             <CardHeader className="text-center pb-2">
               <CardTitle className="text-2xl">
+                {isResetPasswordMode && 'Reset Your Password'}
                 {activeTab === 'signin' && 'Welcome Back'}
                 {activeTab === 'signup' && 'Create Account'}
                 {activeTab === 'forgot' && 'Reset Password'}
               </CardTitle>
               <CardDescription>
+                {isResetPasswordMode && 'Enter your new password below'}
                 {activeTab === 'signin' && 'Sign in to access your quizzes and surveys'}
                 {activeTab === 'signup' && 'Start creating secure quizzes and surveys'}
                 {activeTab === 'forgot' && 'Enter your email to receive a reset link'}
@@ -181,7 +239,46 @@ const Auth = () => {
             </CardHeader>
 
             <CardContent className="pt-4">
-              {activeTab === 'forgot' ? (
+              {isResetPasswordMode ? (
+                <form onSubmit={handleResetPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">New Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="new-password"
+                        type="password"
+                        placeholder="Enter your new password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className={errors.password ? 'border-destructive' : ''}
+                      />
+                    </div>
+                    {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirm Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="confirm-password"
+                        type="password"
+                        placeholder="Confirm your new password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className={errors.confirmPassword ? 'border-destructive' : ''}
+                      />
+                    </div>
+                    {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword}</p>}
+                  </div>
+                  
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Reset Password
+                  </Button>
+                </form>
+              ) : activeTab === 'forgot' ? (
                 <form onSubmit={handleForgotPassword} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="forgot-email">Email</Label>
