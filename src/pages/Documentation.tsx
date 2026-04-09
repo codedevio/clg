@@ -1,4 +1,5 @@
 import { Book, FileText, Code, Lightbulb, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -120,7 +121,7 @@ const Documentation = () => {
               Can't find what you're looking for?
             </p>
             <Button variant="outline" asChild>
-              <a href="/help">Visit Help Center</a>
+              <Link to="/help">Visit Help Center</Link>
             </Button>
           </CardContent>
         </Card>

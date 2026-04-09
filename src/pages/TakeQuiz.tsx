@@ -11,6 +11,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { GraduationCap, Clock, AlertTriangle, ChevronLeft, ChevronRight, Send, Loader2, Languages } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
+  validateFullName,
+  validateRollNumber,
+  validateBatch,
+  validateCollegeId,
+  validateStudentFields,
+  isStudentFormValid,
+  type StudentFieldErrors,
+} from '@/lib/studentValidation';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -72,6 +81,33 @@ const TakeQuiz = () => {
     batch: '',
     college_id: '',
   });
+
+  const [fieldErrors, setFieldErrors] = useState<StudentFieldErrors>({
+    full_name: '',
+    roll_number: '',
+    batch: '',
+    college_id: '',
+  });
+
+  // Track which fields have been touched (blurred) to show errors
+  const [touched, setTouched] = useState<Record<keyof StudentFieldErrors, boolean>>({
+    full_name: false,
+    roll_number: false,
+    batch: false,
+    college_id: false,
+  });
+
+  const handleFieldChange = (field: keyof StudentIdentity, value: string) => {
+    const updated = { ...studentInfo, [field]: value };
+    setStudentInfo(updated);
+    // Validate this field immediately while typing
+    const errors = validateStudentFields(updated);
+    setFieldErrors(errors);
+  };
+
+  const handleFieldBlur = (field: keyof StudentFieldErrors) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  };
 
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [attemptToken, setAttemptToken] = useState<string | null>(null);
@@ -164,11 +200,25 @@ const TakeQuiz = () => {
   };
 
   const handleStartQuiz = async () => {
-    if (!studentInfo.full_name || !studentInfo.roll_number || !studentInfo.batch || !studentInfo.college_id) {
+    // Mark all fields as touched so errors are visible
+    setTouched({ full_name: true, roll_number: true, batch: true, college_id: true });
+
+    // Trim whitespace before final validation
+    const trimmed = {
+      full_name: studentInfo.full_name.trim(),
+      roll_number: studentInfo.roll_number.trim(),
+      batch: studentInfo.batch.trim(),
+      college_id: studentInfo.college_id.trim(),
+    };
+    setStudentInfo(trimmed);
+
+    const errors = validateStudentFields(trimmed);
+    setFieldErrors(errors);
+    if (!isStudentFormValid(errors)) {
       toast({
         variant: 'destructive',
-        title: 'Missing information',
-        description: 'Please fill in all fields.',
+        title: 'Invalid information',
+        description: 'Please fix the errors highlighted in the form.',
       });
       return;
     }
@@ -273,6 +323,12 @@ const TakeQuiz = () => {
           tab_switch_count: tabSwitchCount,
         })
         .eq('id', attemptId);
+
+      // Save attempt ID to localStorage so the student can view it in their dashboard later
+      const stored = JSON.parse(localStorage.getItem('qx_my_attempts') || '[]');
+      if (!stored.includes(attemptId)) {
+        localStorage.setItem('qx_my_attempts', JSON.stringify([attemptId, ...stored]));
+      }
 
       setStage('submitted');
       toast({
@@ -386,47 +442,77 @@ const TakeQuiz = () => {
               </div>
 
               <div className="space-y-4">
+                {/* Full Name */}
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Full Name *</Label>
                   <Input
                     id="fullName"
                     value={studentInfo.full_name}
-                    onChange={(e) => setStudentInfo({ ...studentInfo, full_name: e.target.value })}
+                    onChange={(e) => handleFieldChange('full_name', e.target.value)}
+                    onBlur={() => handleFieldBlur('full_name')}
                     placeholder="Enter your full name"
+                    className={cn(touched.full_name && fieldErrors.full_name && 'border-destructive focus-visible:ring-destructive')}
                   />
+                  {touched.full_name && fieldErrors.full_name && (
+                    <p className="text-xs text-destructive mt-1">{fieldErrors.full_name}</p>
+                  )}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+
+                {/* Roll Number + Batch */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="rollNumber">Roll Number *</Label>
                     <Input
                       id="rollNumber"
                       value={studentInfo.roll_number}
-                      onChange={(e) => setStudentInfo({ ...studentInfo, roll_number: e.target.value })}
-                      placeholder="e.g., 2024001"
+                      onChange={(e) => handleFieldChange('roll_number', e.target.value.toUpperCase())}
+                      onBlur={() => handleFieldBlur('roll_number')}
+                      placeholder="e.g. A-12"
+                      className={cn(touched.roll_number && fieldErrors.roll_number && 'border-destructive focus-visible:ring-destructive')}
                     />
+                    {touched.roll_number && fieldErrors.roll_number && (
+                      <p className="text-xs text-destructive mt-1">{fieldErrors.roll_number}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="batch">Batch *</Label>
                     <Input
                       id="batch"
                       value={studentInfo.batch}
-                      onChange={(e) => setStudentInfo({ ...studentInfo, batch: e.target.value })}
-                      placeholder="e.g., 2024"
+                      onChange={(e) => handleFieldChange('batch', e.target.value)}
+                      onBlur={() => handleFieldBlur('batch')}
+                      placeholder="e.g. BCA-AKU-B-1"
+                      className={cn(touched.batch && fieldErrors.batch && 'border-destructive focus-visible:ring-destructive')}
                     />
+                    {touched.batch && fieldErrors.batch && (
+                      <p className="text-xs text-destructive mt-1">{fieldErrors.batch}</p>
+                    )}
                   </div>
                 </div>
+
+                {/* College ID */}
                 <div className="space-y-2">
                   <Label htmlFor="collegeId">College ID *</Label>
                   <Input
                     id="collegeId"
                     value={studentInfo.college_id}
-                    onChange={(e) => setStudentInfo({ ...studentInfo, college_id: e.target.value })}
-                    placeholder="Enter your college ID"
+                    onChange={(e) => handleFieldChange('college_id', e.target.value)}
+                    onBlur={() => handleFieldBlur('college_id')}
+                    placeholder="e.g. 444-1234"
+                    className={cn(touched.college_id && fieldErrors.college_id && 'border-destructive focus-visible:ring-destructive')}
                   />
+                  {touched.college_id && fieldErrors.college_id && (
+                    <p className="text-xs text-destructive mt-1">{fieldErrors.college_id}</p>
+                  )}
                 </div>
               </div>
 
-              <Button onClick={handleStartQuiz} className="w-full" size="lg">
+              <Button
+                onClick={handleStartQuiz}
+                className="w-full"
+                size="lg"
+                disabled={Object.values(touched).some(Boolean) && !isStudentFormValid(fieldErrors)}
+              >
                 Start Quiz
               </Button>
             </CardContent>

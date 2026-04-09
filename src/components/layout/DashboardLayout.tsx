@@ -42,7 +42,7 @@ const baseNavItems = [
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, signOut } = useAuth();
-  const { isSuperAdmin } = useUserRole();
+  const { isSuperAdmin, isStudent } = useUserRole();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -56,13 +56,19 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     : user?.email?.charAt(0).toUpperCase() || 'U';
 
   // Build nav items dynamically based on role
-  const navItems = isSuperAdmin
-    ? [
-        ...baseNavItems.slice(0, 1),
-        { href: '/dashboard/admin', label: 'Admin Panel', icon: Shield },
-        ...baseNavItems.slice(1),
-      ]
-    : baseNavItems;
+  let navItems = baseNavItems;
+  if (isStudent) {
+    navItems = [
+      { href: '/dashboard/my-results', label: 'My Results', icon: ClipboardList },
+      { href: '/dashboard/settings', label: 'Settings', icon: Settings },
+    ];
+  } else if (isSuperAdmin) {
+    navItems = [
+      ...baseNavItems.slice(0, 1),
+      { href: '/dashboard/admin', label: 'Admin Panel', icon: Shield },
+      ...baseNavItems.slice(1),
+    ];
+  }
 
   return (
     <div className="min-h-screen bg-background">

@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { FileText, ClipboardList, Users, TrendingUp, Plus, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface Quiz {
   id: string;
@@ -26,6 +27,8 @@ interface Survey {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { isStudent, loading: roleLoading } = useUserRole();
+  const navigate = useNavigate();
   const firstName = user?.user_metadata?.full_name?.split(' ')[0] || 'there';
   
   const [loading, setLoading] = useState(true);
@@ -40,6 +43,15 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      // Wait for roles to load
+      if (roleLoading) return;
+
+      // If user is a student, redirect to their personal dashboard
+      if (isStudent) {
+        navigate('/dashboard/my-results', { replace: true });
+        return;
+      }
+
       if (!user) return;
       
       try {
@@ -106,7 +118,18 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, [user]);
+  }, [user, isStudent, roleLoading, navigate]);
+
+  // If redirecting, don't flash the UI
+  if (roleLoading || isStudent) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <Skeleton className="h-8 w-8 rounded-full" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   const statCards = [
     { label: 'Total Quizzes', value: stats.totalQuizzes.toString(), icon: FileText, color: 'bg-primary' },

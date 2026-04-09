@@ -20,13 +20,13 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <a href="/#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Features
             </a>
-            <a href="#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <a href="/#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               How It Works
             </a>
-            <a href="#security" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <a href="/#security" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Security
             </a>
           </nav>
@@ -54,13 +54,13 @@ const Header = () => {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-border/50">
             <nav className="flex flex-col gap-4">
-              <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              <a href="/#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 Features
               </a>
-              <a href="#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              <a href="/#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 How It Works
               </a>
-              <a href="#security" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              <a href="/#security" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 Security
               </a>
               <div className="flex flex-col gap-2 pt-4">

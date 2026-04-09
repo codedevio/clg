@@ -834,6 +834,10 @@ CREATE POLICY "Published quizzes are viewable by all"
   USING (is_published = true);
 
 -- ---- quiz_access_rules ----
+CREATE POLICY "Admins can manage all quiz access rules"
+  ON public.quiz_access_rules FOR ALL
+  USING (public.has_role(auth.uid(), 'admin'));
+
 CREATE POLICY "Creators can manage own quiz access rules"
   ON public.quiz_access_rules
   AS PERMISSIVE FOR ALL TO authenticated
@@ -856,8 +860,8 @@ CREATE POLICY "Creators can view questions for their quizzes"
   ON public.quiz_questions FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.quizzes q WHERE q.id = quiz_questions.quiz_id AND q.creator_id = auth.uid()));
 
-CREATE POLICY "Admins can view all quiz questions"
-  ON public.quiz_questions FOR SELECT
+CREATE POLICY "Admins can manage all quiz questions"
+  ON public.quiz_questions FOR ALL
   USING (public.has_role(auth.uid(), 'admin'));
 
 -- ---- student_identities ----
@@ -942,6 +946,10 @@ CREATE POLICY "Students can insert logs for in-progress attempts"
     AND qa.status = 'in_progress'
   ));
 
+CREATE POLICY "Admins can view all attempt logs"
+  ON public.attempt_logs FOR SELECT
+  USING (public.has_role(auth.uid(), 'admin'));
+
 CREATE POLICY "Creators can view logs for their quizzes"
   ON public.attempt_logs FOR SELECT
   USING (EXISTS (
@@ -951,6 +959,10 @@ CREATE POLICY "Creators can view logs for their quizzes"
   ));
 
 -- ---- surveys ----
+CREATE POLICY "Admins can manage all surveys"
+  ON public.surveys FOR ALL
+  USING (public.has_role(auth.uid(), 'admin'));
+
 CREATE POLICY "Creators can manage own surveys"
   ON public.surveys FOR ALL
   USING (auth.uid() = creator_id);
@@ -960,6 +972,10 @@ CREATE POLICY "Published surveys are viewable by all"
   USING (is_published = true);
 
 -- ---- survey_questions ----
+CREATE POLICY "Admins can manage all survey questions"
+  ON public.survey_questions FOR ALL
+  USING (public.has_role(auth.uid(), 'admin'));
+
 CREATE POLICY "Creators can manage own survey questions"
   ON public.survey_questions FOR ALL
   USING (EXISTS (SELECT 1 FROM public.surveys WHERE id = survey_id AND creator_id = auth.uid()));
@@ -969,6 +985,10 @@ CREATE POLICY "Questions viewable for published surveys"
   USING (EXISTS (SELECT 1 FROM public.surveys WHERE id = survey_id AND is_published = true));
 
 -- ---- survey_responses ----
+CREATE POLICY "Admins can view all survey responses"
+  ON public.survey_responses FOR SELECT
+  USING (public.has_role(auth.uid(), 'admin'));
+
 CREATE POLICY "Anyone can submit survey responses"
   ON public.survey_responses FOR INSERT
   WITH CHECK (EXISTS (SELECT 1 FROM public.surveys WHERE id = survey_id AND is_published = true));

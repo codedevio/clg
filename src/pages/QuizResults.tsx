@@ -18,6 +18,7 @@ import {
   MinusCircle,
   Download,
   Eye,
+  Printer,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -60,6 +61,10 @@ const QuizResults = () => {
   const { quizId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const handlePrintClass = () => {
+    window.print();
+  };
   
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
@@ -199,13 +204,102 @@ const QuizResults = () => {
     );
   }
 
+  const passCount = attempts.filter(a => a.passed === true).length;
+  const failCount = attempts.filter(a => a.passed === false).length;
+  const generatedAt = format(new Date(), 'dd MMM yyyy, hh:mm a');
+
   return (
     <DashboardLayout>
+      {/* ── Print-only styles ────────────────────────────────────── */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden !important; }
+          #quiz-class-report, #quiz-class-report * { visibility: visible !important; }
+          #quiz-class-report {
+            position: absolute; left: 0; top: 0;
+            width: 100%; padding: 24px; font-family: Arial, sans-serif;
+          }
+          .no-print { display: none !important; }
+        }
+      `}</style>
+
+      {/* ── Print-only marksheet (hidden on screen) ──────────────── */}
+      <div id="quiz-class-report" style={{ display: 'none' }}>
+        <style>{`
+          #quiz-class-report { display: block !important; }
+          @media screen { #quiz-class-report { display: none !important; } }
+          @media print  { #quiz-class-report { display: block !important; } }
+        `}</style>
+
+        {/* College-style header */}
+        <div style={{ textAlign: 'center', borderBottom: '2px solid #333', paddingBottom: 12, marginBottom: 16 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Quiz Result Sheet</h1>
+          <h2 style={{ fontSize: 16, fontWeight: 600, margin: '4px 0 0' }}>{quiz.title}</h2>
+          {quiz.description && <p style={{ fontSize: 12, color: '#555', margin: '2px 0 0' }}>{quiz.description}</p>}
+        </div>
+
+        {/* Meta info row */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 12, color: '#444' }}>
+          <span>Total Marks: <b>{quiz.total_marks}</b></span>
+          <span>Time Limit: <b>{quiz.time_limit_minutes} mins</b></span>
+          <span>Passing: <b>{quiz.passing_percentage}%</b></span>
+          <span>Total Students: <b>{attempts.length}</b></span>
+          <span>Pass: <b style={{ color: 'green' }}>{passCount}</b> &nbsp;|&nbsp; Fail: <b style={{ color: 'red' }}>{failCount}</b></span>
+        </div>
+
+        {/* Ranked table */}
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+          <thead>
+            <tr style={{ backgroundColor: '#f0f0f0' }}>
+              {['Rank', 'Name', 'Roll No.', 'Batch', 'College ID', 'Score', '%', 'Correct', 'Wrong', 'Unanswered', 'Duration', 'Result', 'Submitted At'].map(h => (
+                <th key={h} style={{ border: '1px solid #ccc', padding: '6px 8px', textAlign: 'left' }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {getSortedAttempts().map((attempt, idx) => {
+              const rank = idx + 1;
+              const passed = attempt.passed;
+              return (
+                <tr key={attempt.id} style={{ backgroundColor: idx % 2 === 0 ? '#fff' : '#fafafa' }}>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px', fontWeight: 700 }}>#{rank}</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px' }}>{attempt.student_identities?.full_name || '-'}</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px' }}>{attempt.student_identities?.roll_number || '-'}</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px' }}>{attempt.student_identities?.batch || '-'}</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px' }}>{attempt.student_identities?.college_id || '-'}</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px', fontWeight: 600 }}>{attempt.score ?? 0}/{quiz.total_marks}</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px', fontWeight: 600 }}>{attempt.percentage?.toFixed(1) ?? 0}%</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px', color: 'green' }}>{attempt.correct_count ?? 0}</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px', color: 'red' }}>{attempt.wrong_count ?? 0}</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px' }}>{attempt.unanswered_count ?? 0}</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px' }}>{attempt.time_spent_seconds ? `${Math.floor(attempt.time_spent_seconds / 60)}m ${attempt.time_spent_seconds % 60}s` : '-'}</td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px', fontWeight: 700, color: passed ? 'green' : 'red' }}>
+                    {rank === 1 && passed ? '🥇 1st' : rank === 2 && passed ? '🥈 2nd' : rank === 3 && passed ? '🥉 3rd' : passed ? 'Pass' : 'Fail'}
+                  </td>
+                  <td style={{ border: '1px solid #ccc', padding: '5px 8px', fontSize: 11 }}>
+                    {attempt.submitted_at ? format(new Date(attempt.submitted_at), 'dd/MM/yy hh:mm a') : '-'}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        {/* Stats footer */}
+        <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', fontSize: 12, borderTop: '1px solid #ccc', paddingTop: 10, color: '#444' }}>
+          <span>Avg. Score: <b>{stats.avgScore}%</b></span>
+          <span>Pass Rate: <b>{stats.passRate}%</b></span>
+          <span>Generated: <b>{generatedAt}</b></span>
+          <span style={{ fontStyle: 'italic', color: '#888' }}>QuizoraX &mdash; Confidential</span>
+        </div>
+      </div>
+
+      {/* ── Regular on-screen view ───────────────────────────────── */}
       <div className="space-y-6 animate-fade-up">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard/quizzes')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard/quizzes')} className="no-print">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
@@ -213,10 +307,16 @@ const QuizResults = () => {
               <p className="text-muted-foreground">Quiz Results & Analytics</p>
             </div>
           </div>
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export CSV
-          </Button>
+          <div className="flex gap-2 no-print">
+            <Button variant="outline" onClick={handlePrintClass} disabled={attempts.length === 0}>
+              <Printer className="h-4 w-4 mr-2" />
+              Print Class Report
+            </Button>
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}

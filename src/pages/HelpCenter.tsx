@@ -1,4 +1,5 @@
 import { Search, MessageCircle, HelpCircle, BookOpen, Users, Settings } from "lucide-react";
+import { Link } from "react-router-dom";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -130,7 +131,7 @@ const HelpCenter = () => {
                 </div>
               </div>
               <Button variant="secondary" asChild>
-                <a href="/contact">Contact Support</a>
+                <Link to="/contact">Contact Support</Link>
               </Button>
             </div>
           </CardContent>

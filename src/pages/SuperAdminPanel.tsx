@@ -28,6 +28,7 @@ import { supabase } from '@/integrations/supabase/client';
 import SiteSettingsManager from '@/components/admin/SiteSettingsManager';
 import FooterContentManager from '@/components/admin/FooterContentManager';
 import OwnershipTransfer from '@/components/admin/OwnershipTransfer';
+import AdminReport from '@/components/admin/AdminReport';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Shield,
@@ -42,6 +43,7 @@ import {
   Settings,
   LayoutTemplate,
   ShieldAlert,
+  BarChart3,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -268,10 +270,14 @@ const SuperAdminPanel = () => {
 
         {/* Tabs for different sections */}
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="w-full sm:w-auto grid grid-cols-4 sm:flex">
+          <TabsList className="w-full sm:w-auto grid grid-cols-5 sm:flex">
             <TabsTrigger value="users" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Users</span>
+            </TabsTrigger>
+            <TabsTrigger value="report" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Report</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
               <Settings className="h-4 w-4" />
@@ -408,6 +414,15 @@ const SuperAdminPanel = () => {
                     </div>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Report Tab */}
+          <TabsContent value="report">
+            <Card className="border-border/50 shadow-sm">
+              <CardContent className="p-4 sm:p-6">
+                <AdminReport />
               </CardContent>
             </Card>
           </TabsContent>

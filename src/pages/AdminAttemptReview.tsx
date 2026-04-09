@@ -16,6 +16,7 @@ import {
   Clock,
   User,
   AlertTriangle,
+  Printer,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -73,6 +74,10 @@ const AdminAttemptReview = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   const [attempt, setAttempt] = useState<QuizAttempt | null>(null);
   const [quiz, setQuiz] = useState<Quiz | null>(null);
@@ -216,14 +221,91 @@ const AdminAttemptReview = () => {
 
   return (
     <DashboardLayout>
+      {/* ── Print-only styles ────────────────────────────────────── */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden !important; }
+          #student-result-slip, #student-result-slip * { visibility: visible !important; }
+          #student-result-slip {
+            position: absolute; left: 0; top: 0;
+            width: 100%; padding: 24px; font-family: Arial, sans-serif;
+          }
+          .no-print { display: none !important; }
+        }
+      `}</style>
+
+      {/* ── Hidden printable result slip ─────────────────────────── */}
+      <div id="student-result-slip" style={{ display: 'none' }}>
+        <style>{`
+          @media screen { #student-result-slip { display: none !important; } }
+          @media print  { #student-result-slip { display: block !important; } }
+        `}</style>
+
+        {/* Header */}
+        <div style={{ textAlign: 'center', borderBottom: '2px solid #333', paddingBottom: 12, marginBottom: 16 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Individual Result Slip</h1>
+          <h2 style={{ fontSize: 15, fontWeight: 600, margin: '4px 0 0' }}>{quiz.title}</h2>
+          <p style={{ fontSize: 11, color: '#666', margin: '2px 0 0' }}>Generated: {format(new Date(), 'dd MMM yyyy, hh:mm a')}</p>
+        </div>
+
+        {/* Student + Score info in two columns */}
+        <div style={{ display: 'flex', gap: 24, marginBottom: 16 }}>
+          {/* Student Info */}
+          <div style={{ flex: 1, border: '1px solid #ddd', borderRadius: 6, padding: 12 }}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, borderBottom: '1px solid #eee', paddingBottom: 4 }}>Student Information</h3>
+            {[
+              ['Name', attempt.student_identities?.full_name],
+              ['Roll Number', attempt.student_identities?.roll_number],
+              ['Batch', attempt.student_identities?.batch],
+              ['College ID', attempt.student_identities?.college_id],
+            ].map(([label, value]) => (
+              <div key={label as string} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+                <span style={{ color: '#666' }}>{label}:</span>
+                <span style={{ fontWeight: 600 }}>{value || '-'}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Score Summary */}
+          <div style={{ flex: 1, border: '1px solid #ddd', borderRadius: 6, padding: 12 }}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, borderBottom: '1px solid #eee', paddingBottom: 4 }}>Attempt Summary</h3>
+            {[
+              ['Score', `${attempt.score ?? 0} / ${quiz.total_marks}`],
+              ['Percentage', `${attempt.percentage?.toFixed(1) ?? 0}%`],
+              ['Result', attempt.passed ? 'PASSED ✓' : 'FAILED ✗'],
+              ['Correct Answers', String(attempt.correct_count ?? 0)],
+              ['Wrong Answers', String(attempt.wrong_count ?? 0)],
+              ['Unanswered', String(attempt.unanswered_count ?? 0)],
+              ['Time Taken', formatDuration(attempt.time_spent_seconds)],
+              ['Tab Switches', String(attempt.tab_switch_count ?? 0)],
+              ['Submitted At', attempt.submitted_at ? format(new Date(attempt.submitted_at), 'dd/MM/yyyy hh:mm a') : '-'],
+            ].map(([label, value]) => (
+              <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+                <span style={{ color: '#666' }}>{label}:</span>
+                <span style={{ fontWeight: 600, color: label === 'Result' ? (attempt.passed ? 'green' : 'red') : 'inherit' }}>{value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Signature footer */}
+        <div style={{ marginTop: 32, display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#666' }}>
+          <span>Student Signature: _______________________</span>
+          <span>Examiner Signature: _______________________</span>
+          <span style={{ fontStyle: 'italic' }}>QuizoraX — Confidential</span>
+        </div>
+      </div>
+
+      {/* ── Regular on-screen view ───────────────────────────────── */}
       <div className="space-y-6 animate-fade-up">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => navigate(`/dashboard/quizzes/${quiz.id}/results`)}
+              className="no-print"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -234,9 +316,15 @@ const AdminAttemptReview = () => {
               </p>
             </div>
           </div>
-          <Badge variant={isAdmin ? 'default' : 'secondary'}>
-            {isAdmin ? 'Admin Access' : 'Creator Access'}
-          </Badge>
+          <div className="flex items-center gap-3 no-print">
+            <Button variant="outline" size="sm" onClick={handlePrint}>
+              <Printer className="h-4 w-4 mr-2" />
+              Print Result
+            </Button>
+            <Badge variant={isAdmin ? 'default' : 'secondary'}>
+              {isAdmin ? 'Admin Access' : 'Creator Access'}
+            </Badge>
+          </div>
         </div>
 
         {/* Student Info & Stats */}

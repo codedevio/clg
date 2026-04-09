@@ -1,7 +1,7 @@
 {
-  "buildCommand": "bun install && bun run build",
-  "devCommand": "bun run dev",
-  "installCommand": "bun install",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
   "framework": "vite",
   "outputDirectory": "dist",
   "regions": [

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import PrivilegedRoute from "@/components/PrivilegedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -22,6 +23,7 @@ import Settings from "./pages/Settings";
 import TakeQuiz from "./pages/TakeQuiz";
 import TakeSurvey from "./pages/TakeSurvey";
 import QuizAttemptResult from "./pages/QuizAttemptResult";
+import StudentMyResults from "./pages/StudentMyResults";
 import SuperAdminPanel from "./pages/SuperAdminPanel";
 import Documentation from "./pages/Documentation";
 import HelpCenter from "./pages/HelpCenter";
@@ -52,17 +54,18 @@ const App = () => (
             <Route path="/quiz/result/:attemptId" element={<QuizAttemptResult />} />
             <Route path="/survey/:surveyId" element={<TakeSurvey />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/dashboard/admin" element={<ProtectedRoute><SuperAdminPanel /></ProtectedRoute>} />
-            <Route path="/dashboard/quizzes" element={<ProtectedRoute><Quizzes /></ProtectedRoute>} />
-            <Route path="/dashboard/quizzes/new" element={<ProtectedRoute><QuizBuilder /></ProtectedRoute>} />
-            <Route path="/dashboard/quizzes/:quizId/edit" element={<ProtectedRoute><QuizEdit /></ProtectedRoute>} />
-            <Route path="/dashboard/quizzes/:quizId/results" element={<ProtectedRoute><QuizResults /></ProtectedRoute>} />
-            <Route path="/dashboard/quizzes/attempt/:attemptId/review" element={<ProtectedRoute><AdminAttemptReview /></ProtectedRoute>} />
-            <Route path="/dashboard/surveys" element={<ProtectedRoute><Surveys /></ProtectedRoute>} />
-            <Route path="/dashboard/surveys/new" element={<ProtectedRoute><SurveyBuilder /></ProtectedRoute>} />
-            <Route path="/dashboard/surveys/:surveyId/edit" element={<ProtectedRoute><SurveyEdit /></ProtectedRoute>} />
-            <Route path="/dashboard/surveys/:surveyId/results" element={<ProtectedRoute><SurveyResults /></ProtectedRoute>} />
-            <Route path="/dashboard/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+            <Route path="/dashboard/my-results" element={<ProtectedRoute><StudentMyResults /></ProtectedRoute>} />
+            <Route path="/dashboard/admin" element={<ProtectedRoute><PrivilegedRoute><SuperAdminPanel /></PrivilegedRoute></ProtectedRoute>} />
+            <Route path="/dashboard/quizzes" element={<ProtectedRoute><PrivilegedRoute><Quizzes /></PrivilegedRoute></ProtectedRoute>} />
+            <Route path="/dashboard/quizzes/new" element={<ProtectedRoute><PrivilegedRoute><QuizBuilder /></PrivilegedRoute></ProtectedRoute>} />
+            <Route path="/dashboard/quizzes/:quizId/edit" element={<ProtectedRoute><PrivilegedRoute><QuizEdit /></PrivilegedRoute></ProtectedRoute>} />
+            <Route path="/dashboard/quizzes/:quizId/results" element={<ProtectedRoute><PrivilegedRoute><QuizResults /></PrivilegedRoute></ProtectedRoute>} />
+            <Route path="/dashboard/quizzes/attempt/:attemptId/review" element={<ProtectedRoute><PrivilegedRoute><AdminAttemptReview /></PrivilegedRoute></ProtectedRoute>} />
+            <Route path="/dashboard/surveys" element={<ProtectedRoute><PrivilegedRoute><Surveys /></PrivilegedRoute></ProtectedRoute>} />
+            <Route path="/dashboard/surveys/new" element={<ProtectedRoute><PrivilegedRoute><SurveyBuilder /></PrivilegedRoute></ProtectedRoute>} />
+            <Route path="/dashboard/surveys/:surveyId/edit" element={<ProtectedRoute><PrivilegedRoute><SurveyEdit /></PrivilegedRoute></ProtectedRoute>} />
+            <Route path="/dashboard/surveys/:surveyId/results" element={<ProtectedRoute><PrivilegedRoute><SurveyResults /></PrivilegedRoute></ProtectedRoute>} />
+            <Route path="/dashboard/analytics" element={<ProtectedRoute><PrivilegedRoute><Analytics /></PrivilegedRoute></ProtectedRoute>} />
             <Route path="/dashboard/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
